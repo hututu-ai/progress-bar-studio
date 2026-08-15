@@ -1,0 +1,5674 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>图图的 AI 进度条 Skill｜五步工作台</title>
+  <link rel="icon" href="data:," />
+  <style>
+    :root {
+      --lime: #dff58a;
+      --lime-deep: #b8d95a;
+      --lime-soft: #f7fce7;
+      --ink: #453a40;
+      --muted: #85777d;
+      --line: #eee8eb;
+      --surface: #fcfafb;
+      --surface-strong: #f4eff1;
+      --white: #ffffff;
+      --accent: #c7e97a;
+      --accent-soft: #f1fbd0;
+      --accent-deep: #65a30d;
+      --accent-text: #000000;
+      --shadow: 0 16px 46px rgba(92, 69, 79, 0.07);
+      --radius-xl: 34px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+      --font-display: "Source Han Sans CN", "思源黑体 CN", "PingFang SC", sans-serif;
+      --font-body: "Source Han Sans CN", "思源黑体 CN", "HarmonyOS Sans SC", "PingFang SC", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background: #ffffff;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      color: var(--ink);
+      background: #ffffff;
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    .topbar {
+      position: fixed;
+      z-index: 50;
+      inset: 0 0 auto;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 0 max(24px, calc((100vw - 1180px) / 2));
+      border-bottom: 1px solid rgba(229, 232, 223, 0.88);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: max-content;
+      font-weight: 600;
+      letter-spacing: -0.018em;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      color: var(--ink);
+      background: var(--lime);
+      box-shadow: inset 0 0 0 1px rgba(32, 35, 29, 0.08);
+    }
+
+    .brand small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+    }
+
+    .top-progress {
+      flex: 1;
+      max-width: 560px;
+    }
+
+    .top-progress-track {
+      height: 6px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--surface-strong);
+    }
+
+    .top-progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--lime-deep);
+      transition: width 180ms ease;
+    }
+
+    .top-progress-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 7px;
+      color: #a0a598;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .top-progress-labels span.active {
+      color: var(--ink);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: var(--white);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .status-pill::before {
+      content: "";
+      width: 8px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--lime-deep);
+      box-shadow: 0 0 0 4px var(--lime-soft);
+    }
+
+    main {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 118px 0 120px;
+      background: #ffffff;
+    }
+
+    .hero {
+      min-height: calc(100svh - 118px);
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+      align-items: center;
+      gap: 54px;
+      padding: 36px 0 70px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow,
+    .step-kicker {
+      width: max-content;
+      margin: 0 0 18px;
+      padding: 7px 12px;
+      border: 1px solid rgba(185, 219, 41, 0.46);
+      border-radius: 999px;
+      background: var(--lime-soft);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 24px;
+      font-size: clamp(54px, 7.2vw, 94px);
+      font-weight: 600;
+      line-height: 1.06;
+      letter-spacing: -0.032em;
+      text-wrap: balance;
+    }
+
+    h1 em,
+    h2 em {
+      font-style: normal;
+      background: linear-gradient(transparent 67%, var(--lime) 67%);
+    }
+
+    .hero-lede {
+      max-width: 670px;
+      margin-bottom: 30px;
+      color: var(--muted);
+      font-size: clamp(17px, 1.8vw, 22px);
+      line-height: 1.72;
+    }
+
+    .hero-actions,
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .button {
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--ink);
+      background: var(--white);
+      font-weight: 900;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(28, 34, 22, 0.09);
+    }
+
+    .button.primary {
+      border-color: var(--lime);
+      background: var(--lime);
+    }
+
+    .button.dark {
+      border-color: var(--ink);
+      color: white;
+      background: var(--ink);
+    }
+
+    .button.small {
+      min-height: 38px;
+      padding-inline: 14px;
+      border-radius: 11px;
+      font-size: 13px;
+    }
+
+    .hero-visual {
+      position: relative;
+      min-height: 560px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: #ffffff;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-visual::before {
+      display: none;
+    }
+
+    .hero-visual img {
+      position: relative;
+      width: 96%;
+      object-fit: contain;
+    }
+
+    .hero-badge {
+      display: none;
+    }
+
+    .overview {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      padding: 34px 0 0;
+    }
+
+    .overview a {
+      min-height: 90px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      color: inherit;
+      background: white;
+      text-decoration: none;
+      transition: border-color 160ms ease, background 160ms ease;
+    }
+
+    .overview a:hover {
+      border-color: var(--lime-deep);
+      background: var(--lime-soft);
+    }
+
+    .overview b {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 13px;
+    }
+
+    .overview span {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .step {
+      min-height: 100svh;
+      display: grid;
+      align-content: center;
+      gap: 26px;
+      padding: 110px 0 78px;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: 66px;
+    }
+
+    .step-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 0.52fr);
+      align-items: end;
+      gap: 36px;
+    }
+
+    .step-index {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+    }
+
+    .step-index b {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      aspect-ratio: 1;
+      border-radius: 11px;
+      color: var(--ink);
+      background: var(--lime);
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin-bottom: 0;
+      font-size: clamp(42px, 5vw, 68px);
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -0.032em;
+      text-wrap: balance;
+    }
+
+    .step-description {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    .workbench {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: #ffffff;
+      box-shadow: var(--shadow);
+    }
+
+    .workbench-bar {
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .workbench-bar i {
+      width: 9px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #cfd4c8;
+    }
+
+    .workbench-bar i:first-child {
+      background: var(--lime-deep);
+    }
+
+    .workbench-title {
+      margin-left: 8px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .workbench-state {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .workbench-body {
+      padding: 24px;
+    }
+
+    .upload-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .upload-card {
+      min-height: 190px;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 10px;
+      padding: 20px;
+      border: 1px dashed #cbd0c3;
+      border-radius: 20px;
+      background: #ffffff;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+
+    .upload-card:hover,
+    .upload-card.loaded {
+      border-color: var(--lime-deep);
+      background: var(--lime-soft);
+      transform: translateY(-2px);
+    }
+
+    .upload-icon {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      aspect-ratio: 1;
+      border-radius: 16px;
+      background: var(--surface-strong);
+      font-size: 23px;
+    }
+
+    .upload-card strong {
+      font-size: 14px;
+    }
+
+    .upload-card span {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .probe-panel {
+      display: grid;
+      grid-template-columns: 1.35fr repeat(4, 0.7fr);
+      gap: 9px;
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .probe-item {
+      min-height: 64px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 10px 12px;
+      border-radius: 13px;
+      background: white;
+    }
+
+    .probe-item small {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .probe-item b {
+      margin-top: 5px;
+      font-size: 13px;
+    }
+
+    .probe-item:first-child b {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .system-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 14px;
+      padding: 13px 15px;
+      border: 1px solid rgba(185, 219, 41, 0.42);
+      border-radius: 14px;
+      background: var(--lime-soft);
+      color: #4c542f;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .compare-card {
+      position: relative;
+      min-height: 390px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: white;
+    }
+
+    .compare-card header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .compare-card header span {
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .compare-media {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 330px;
+      overflow: hidden;
+      background:
+        linear-gradient(45deg, #f0f2eb 25%, transparent 25%),
+        linear-gradient(-45deg, #f0f2eb 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #f0f2eb 75%),
+        linear-gradient(-45deg, transparent 75%, #f0f2eb 75%),
+        white;
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+      background-size: 24px 24px;
+    }
+
+    .compare-card:first-child .compare-media {
+      background: #ffffff;
+    }
+
+    .compare-media img {
+      width: 82%;
+      height: 310px;
+      object-fit: contain;
+    }
+
+    .walking-pose {
+      animation: idleWalk 1.05s ease-in-out infinite alternate;
+      filter: drop-shadow(0 10px 10px rgba(28, 34, 22, 0.1));
+    }
+
+    @keyframes idleWalk {
+      from { transform: translateY(4px) rotate(-1deg) scaleX(1); }
+      to { transform: translateY(-5px) rotate(1deg) scaleX(0.985); }
+    }
+
+    .qc-strip {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .qc-preview {
+      min-height: 250px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--surface);
+    }
+
+    .qc-preview img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      object-position: center 38%;
+    }
+
+    .identity-checks {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--surface);
+    }
+
+    .identity-checks h3 {
+      margin-bottom: 3px;
+      font-size: 14px;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 11px;
+      border-radius: 12px;
+      background: white;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .check-row::before {
+      content: "✓";
+      display: grid;
+      place-items: center;
+      width: 21px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      color: var(--ink);
+      background: var(--lime);
+      font-size: 11px;
+    }
+
+    .character-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .chapter-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+      margin-bottom: 14px;
+    }
+
+    .summary-chip {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+
+    .summary-chip small {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .summary-chip b {
+      display: block;
+      margin-top: 5px;
+      font-size: 13px;
+    }
+
+    .chapter-table-wrap {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      font-size: 12px;
+    }
+
+    th {
+      color: var(--muted);
+      background: var(--surface);
+      font-size: 10px;
+      letter-spacing: 0.05em;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    td:first-child,
+    th:first-child {
+      width: 72px;
+      color: var(--muted);
+    }
+
+    td:nth-child(2),
+    th:nth-child(2) {
+      width: 120px;
+    }
+
+    td[contenteditable="true"] {
+      outline: none;
+      background: #ffffff;
+    }
+
+    td[contenteditable="true"]:focus {
+      box-shadow: inset 0 0 0 2px var(--lime-deep);
+      background: var(--lime-soft);
+    }
+
+    .timeline-map {
+      position: relative;
+      display: grid;
+      grid-template-columns: 16fr 23fr 21fr 24fr 16fr;
+      gap: 4px;
+      height: 54px;
+      margin-top: 14px;
+      padding-top: 20px;
+    }
+
+    .timeline-map::before {
+      content: "";
+      position: absolute;
+      top: 6px;
+      left: 0;
+      right: 0;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--surface-strong);
+    }
+
+    .timeline-segment {
+      position: relative;
+      border-radius: 9px;
+      background: var(--lime-soft);
+      font-size: 10px;
+      font-weight: 900;
+      text-align: center;
+      line-height: 34px;
+    }
+
+    .timeline-segment::before {
+      content: "";
+      position: absolute;
+      top: -18px;
+      left: 0;
+      width: 9px;
+      aspect-ratio: 1;
+      border: 3px solid white;
+      border-radius: 50%;
+      background: var(--lime-deep);
+      box-shadow: 0 0 0 1px var(--lime-deep);
+    }
+
+    .style-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .style-card {
+      min-height: 252px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 14px;
+      padding: 18px;
+      border: 2px solid var(--line);
+      border-radius: 22px;
+      background: #ffffff;
+      cursor: pointer;
+      transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .style-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .style-card.selected {
+      border-color: var(--lime-deep);
+      box-shadow: 0 0 0 5px var(--lime-soft);
+    }
+
+    .style-card header {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .style-code {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      aspect-ratio: 1;
+      border-radius: 11px;
+      background: var(--ink);
+      color: white;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .style-card h3 {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .placement {
+      margin-left: auto;
+      padding: 5px 8px;
+      border-radius: 999px;
+      color: #667035;
+      background: var(--lime-soft);
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .style-demo {
+      position: relative;
+      min-height: 120px;
+      display: grid;
+      align-content: end;
+      padding: 18px 4px 4px;
+    }
+
+    .style-runner {
+      position: absolute;
+      z-index: 3;
+      width: 68px;
+      object-fit: contain;
+      filter: drop-shadow(0 5px 4px rgba(28, 34, 22, 0.13));
+    }
+
+    .s1 .style-runner {
+      left: 55%;
+      bottom: 29px;
+    }
+
+    .s2 .style-runner {
+      left: 48%;
+      bottom: 23px;
+    }
+
+    .s3 .style-runner {
+      left: 52%;
+      bottom: 27px;
+    }
+
+    .s4 .style-runner {
+      left: 52%;
+      bottom: 12px;
+      width: 60px;
+    }
+
+    .demo-line {
+      height: 6px;
+      margin: 0 7px 12px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent) 0 62%, var(--accent-soft) 62%);
+    }
+
+    .capsules,
+    .text-chapters,
+    .band-chapters {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+    }
+
+    .capsules span,
+    .text-chapters span,
+    .band-chapters span {
+      overflow: hidden;
+      font-size: 9px;
+      font-weight: 900;
+      text-align: center;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .capsules span {
+      padding: 8px 3px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+    }
+
+    .capsules span.active {
+      color: var(--accent-text);
+      background: var(--accent);
+    }
+
+    .segments {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin: 0 8px 12px;
+    }
+
+    .segments i {
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+    }
+
+    .segments i.active {
+      background: var(--accent);
+    }
+
+    .segment-labels {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      color: var(--muted);
+      font-size: 8px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .text-chapters {
+      padding: 0 4px;
+    }
+
+    .text-chapters span {
+      padding: 4px;
+      color: var(--muted);
+      border-right: 1px solid var(--line);
+    }
+
+    .text-chapters span.active {
+      color: var(--accent-deep);
+    }
+
+    .band-chapters {
+      overflow: hidden;
+      min-height: 58px;
+      border-radius: 16px;
+      background: var(--accent-soft);
+    }
+
+    .band-chapters span {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      border-right: 1px solid rgba(255, 255, 255, 0.82);
+    }
+
+    .band-chapters span.active {
+      color: var(--accent-text);
+      background: var(--accent);
+    }
+
+    .style-card footer {
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .color-lab {
+      display: grid;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 14px;
+      margin-top: 14px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--surface);
+    }
+
+    .color-controls {
+      display: grid;
+      align-content: start;
+      gap: 12px;
+    }
+
+    .color-controls h3,
+    .swatch-panel h3 {
+      margin-bottom: 0;
+      font-size: 14px;
+    }
+
+    .color-input-row {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 10px;
+    }
+
+    input[type="color"] {
+      width: 52px;
+      height: 44px;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .hex-input {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      outline: none;
+      background: white;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+    }
+
+    .hex-input:focus {
+      border-color: var(--lime-deep);
+      box-shadow: 0 0 0 4px var(--lime-soft);
+    }
+
+    .reference-color {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 46px;
+      padding: 8px 10px;
+      border: 1px dashed #cbd0c3;
+      border-radius: 12px;
+      background: white;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .reference-color b {
+      color: var(--ink);
+    }
+
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .swatch {
+      min-height: 88px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 10px;
+      border: 1px solid rgba(32, 35, 29, 0.08);
+      border-radius: 14px;
+      font-size: 9px;
+      font-weight: 900;
+    }
+
+    .swatch small {
+      display: block;
+      margin-top: 3px;
+      opacity: 0.7;
+    }
+
+    .preview-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 14px;
+    }
+
+    .video-preview {
+      position: relative;
+      min-height: 520px;
+      overflow: hidden;
+      border-radius: 24px;
+      background: #ffffff;
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    .video-preview > img {
+      width: 100%;
+      height: 100%;
+      min-height: 520px;
+      object-fit: cover;
+      object-position: center;
+      opacity: 0.94;
+    }
+
+    .preview-overlay {
+      position: absolute;
+      left: 5%;
+      right: 5%;
+      bottom: 7%;
+      padding: 11px 13px;
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 14px 36px rgba(28, 34, 22, 0.15);
+      backdrop-filter: blur(10px);
+    }
+
+    .preview-track {
+      position: relative;
+      height: 5px;
+      margin: 8px 9px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+    }
+
+    .preview-track-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--accent);
+      animation: previewFill 8s linear infinite;
+    }
+
+    .preview-runner,
+    .preview-runner-cycle {
+      position: absolute;
+      z-index: 2;
+      left: -2%;
+      bottom: -22px;
+      width: 78px;
+      animation: previewRun 8s linear infinite;
+      filter: drop-shadow(0 5px 4px rgba(28, 34, 22, 0.14));
+    }
+
+    .preview-runner-cycle {
+      left: 0;
+      height: 125px;
+      transform: translateX(-76%);
+    }
+
+    .preview-runner-cycle img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      opacity: 0;
+      animation-duration: .666667s;
+      animation-timing-function: steps(1, end);
+      animation-iteration-count: infinite;
+    }
+
+    .preview-runner-cycle img:nth-child(1) { animation-name: gaitFrameOne; }
+    .preview-runner-cycle img:nth-child(2) { animation-name: gaitFrameTwo; }
+    .preview-runner-cycle img:nth-child(3) { animation-name: gaitFrameThree; }
+    .preview-runner-cycle img:nth-child(4) { animation-name: gaitFrameFour; }
+
+    @keyframes previewFill {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+
+    @keyframes previewRun {
+      from { left: 0; }
+      to { left: 100%; }
+    }
+
+    .preview-capsules {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+    }
+
+    .preview-capsules span {
+      padding: 7px 3px;
+      border-radius: 999px;
+      color: var(--muted);
+      background: var(--accent-soft);
+      font-size: 8px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .preview-capsules span:nth-child(3) {
+      color: white;
+      background: var(--accent);
+    }
+
+    .export-panel {
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+
+    .export-card {
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: white;
+      transition: border-color 160ms ease, transform 160ms ease;
+    }
+
+    .export-card:hover {
+      border-color: var(--lime-deep);
+      transform: translateX(3px);
+    }
+
+    .export-card.featured {
+      border-color: var(--lime-deep);
+      background: var(--lime-soft);
+    }
+
+    .export-card header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .file-icon {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      background: var(--surface-strong);
+      font-size: 17px;
+    }
+
+    .export-card h3 {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .export-card p {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.55;
+    }
+
+    .export-tag {
+      margin-left: auto;
+      padding: 5px 8px;
+      border-radius: 999px;
+      color: var(--muted);
+      background: var(--surface);
+      font-size: 8px;
+      font-weight: 900;
+    }
+
+    .approval-gates {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 7px;
+      margin-top: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .gate {
+      min-height: 78px;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 6px;
+      padding: 8px;
+      border-radius: 12px;
+      background: white;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .gate b {
+      display: grid;
+      place-items: center;
+      width: 25px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      color: var(--ink);
+      background: var(--lime);
+      font-size: 10px;
+    }
+
+    .completion {
+      min-height: 72svh;
+      display: grid;
+      place-items: center;
+      padding: 90px 0 20px;
+      text-align: center;
+    }
+
+    .completion-inner {
+      width: min(760px, 100%);
+    }
+
+    .completion img {
+      width: min(420px, 72%);
+      margin: 0 auto 18px;
+    }
+
+    .completion h2 {
+      margin-bottom: 18px;
+    }
+
+    .completion p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .record-controls {
+      position: fixed;
+      z-index: 60;
+      right: 18px;
+      bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 16px;
+      color: white;
+      background: rgba(32, 35, 29, 0.9);
+      box-shadow: 0 16px 42px rgba(28, 34, 22, 0.2);
+      backdrop-filter: blur(16px);
+      transition: opacity 160ms ease;
+    }
+
+    .record-controls.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .record-controls button,
+    .record-controls select {
+      min-height: 36px;
+      border: 0;
+      border-radius: 10px;
+      color: white;
+      background: rgba(255, 255, 255, 0.12);
+      cursor: pointer;
+    }
+
+    .record-controls button {
+      padding: 0 11px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .record-controls button.primary {
+      color: var(--ink);
+      background: var(--lime);
+    }
+
+    .record-controls select {
+      padding-inline: 8px;
+      font-size: 11px;
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 80;
+      left: 50%;
+      bottom: 26px;
+      padding: 11px 15px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: white;
+      box-shadow: 0 14px 40px rgba(28, 34, 22, 0.14);
+      font-size: 12px;
+      font-weight: 900;
+      transform: translate(-50%, 20px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 900px) {
+      .top-progress,
+      .status-pill {
+        display: none;
+      }
+
+      main {
+        width: min(720px, calc(100% - 24px));
+        padding-top: 94px;
+      }
+
+      .hero {
+        min-height: auto;
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+
+      .hero-visual {
+        min-height: 430px;
+      }
+
+      .overview {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .overview a:last-child {
+        grid-column: 1 / -1;
+      }
+
+      .step-header,
+      .preview-layout,
+      .color-lab {
+        grid-template-columns: 1fr;
+      }
+
+      .upload-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .upload-card {
+        min-height: 125px;
+      }
+
+      .probe-panel {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .probe-item:first-child {
+        grid-column: 1 / -1;
+      }
+
+      .style-grid,
+      .compare-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .chapter-summary {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .approval-gates {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .topbar {
+        height: 62px;
+        padding: 0 14px;
+      }
+
+      .brand small {
+        display: none;
+      }
+
+      h1 {
+        font-size: 49px;
+      }
+
+      h2 {
+        font-size: 38px;
+      }
+
+      .hero-visual {
+        min-height: 340px;
+      }
+
+      .overview {
+        grid-template-columns: 1fr;
+      }
+
+      .overview a:last-child {
+        grid-column: auto;
+      }
+
+      .step {
+        padding-top: 84px;
+      }
+
+      .workbench-body {
+        padding: 14px;
+      }
+
+      .compare-card {
+        min-height: 330px;
+      }
+
+      .compare-media {
+        min-height: 270px;
+      }
+
+      .compare-media img {
+        height: 250px;
+      }
+
+      .qc-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .swatches {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .record-controls {
+        right: 8px;
+        bottom: 8px;
+        max-width: calc(100vw - 16px);
+        flex-wrap: wrap;
+        transform: scale(0.9);
+        transform-origin: right bottom;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+
+    /* Vertical story mode: one continuous column from top to bottom. */
+    html {
+      scroll-snap-type: none;
+      overflow-x: hidden;
+    }
+
+    body {
+      overflow-x: hidden;
+      background: #ffffff;
+    }
+
+    .topbar {
+      left: 50%;
+      right: auto;
+      width: min(720px, 100vw);
+      padding: 0 22px;
+      border-inline: 1px solid rgba(229, 232, 223, 0.88);
+      transform: translateX(-50%);
+    }
+
+    main {
+      width: min(720px, 100%);
+      margin: 0 auto;
+      padding: 70px 0 0;
+      background: #ffffff;
+      box-shadow: 0 0 56px rgba(92, 69, 79, 0.05);
+    }
+
+    .hero,
+    .step,
+    .completion {
+      min-height: auto;
+      scroll-snap-align: none;
+      border-bottom: 0;
+      background: #ffffff;
+    }
+
+    .hero {
+      grid-template-columns: 1fr;
+      align-content: center;
+      gap: 24px;
+      padding: 54px 34px 48px;
+    }
+
+    .hero h1 {
+      max-width: 620px;
+      font-size: clamp(41px, 8vw, 56px);
+    }
+
+    .hero-lede {
+      font-size: 16px;
+    }
+
+    .hero-visual {
+      min-height: 340px;
+    }
+
+    .overview {
+      grid-template-columns: repeat(5, 1fr);
+      gap: 7px;
+      padding-top: 18px;
+    }
+
+    .overview a {
+      min-height: 76px;
+      padding: 11px 9px;
+      border-radius: 14px;
+    }
+
+    .overview b {
+      font-size: 11px;
+    }
+
+    .overview span {
+      font-size: 9px;
+    }
+
+    .step {
+      align-content: start;
+      gap: 18px;
+      padding: 92px 30px 34px;
+    }
+
+    .step + .step {
+      padding-top: 72px;
+    }
+
+    .step-header {
+      grid-template-columns: 1fr;
+      align-items: start;
+      gap: 12px;
+    }
+
+    .step-index {
+      margin-bottom: 10px;
+    }
+
+    .step h2 {
+      max-width: 640px;
+      font-size: clamp(34px, 7vw, 45px);
+    }
+
+    .step-description {
+      max-width: 620px;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .workbench {
+      border-radius: 26px;
+      box-shadow: 0 14px 36px rgba(92, 69, 79, 0.06);
+    }
+
+    .workbench-body {
+      padding: 18px;
+    }
+
+    .upload-card {
+      min-height: 150px;
+      padding: 14px;
+    }
+
+    .compare-card {
+      min-height: 300px;
+    }
+
+    .compare-media {
+      min-height: 250px;
+    }
+
+    .compare-media img {
+      height: 235px;
+    }
+
+    .qc-preview,
+    .qc-preview img {
+      min-height: 210px;
+      height: 210px;
+    }
+
+    .style-card {
+      min-height: 225px;
+      padding: 15px;
+    }
+
+    .style-demo {
+      min-height: 104px;
+    }
+
+    .color-lab,
+    .preview-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .video-preview,
+    .video-preview > img {
+      min-height: 460px;
+    }
+
+    .completion {
+      min-height: 68dvh;
+      padding: 88px 32px 54px;
+    }
+
+    .record-controls {
+      right: max(10px, calc((100vw - 720px) / 2 + 10px));
+    }
+
+    @media (max-width: 620px) {
+      .topbar {
+        padding-inline: 14px;
+      }
+
+      main {
+        width: 100%;
+      }
+
+      .hero {
+        padding: 42px 20px 38px;
+      }
+
+      .hero h1 {
+        font-size: clamp(36px, 8.7vw, 40px);
+        line-height: 1.13;
+      }
+
+      .hero-visual {
+        min-height: 292px;
+      }
+
+      .overview {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .overview a:last-child {
+        grid-column: 1 / -1;
+      }
+
+      .step {
+        padding: 88px 16px 44px;
+      }
+
+      .step h2 {
+        font-size: clamp(30px, 7.4vw, 36px);
+        line-height: 1.16;
+      }
+
+      .upload-grid,
+      .compare-grid,
+      .style-grid,
+      .qc-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .upload-card {
+        min-height: 110px;
+      }
+
+      .probe-panel,
+      .chapter-summary {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .approval-gates {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .record-controls {
+        right: 8px;
+      }
+    }
+
+    /* Soft editorial typography and the old-vs-new workflow comparison. */
+    h1,
+    h2,
+    .brand,
+    .button,
+    .eyebrow,
+    .step-kicker,
+    .workflow-contrast h3 {
+      font-family: "Yuanti SC", "FZLanTingHeiS-R-GB", "PingFang SC", sans-serif;
+    }
+
+    h1,
+    h2 {
+      font-weight: 700;
+      letter-spacing: -0.018em;
+    }
+
+    .eyebrow,
+    .step-kicker {
+      letter-spacing: 0.025em;
+    }
+
+    .button {
+      font-weight: 700;
+    }
+
+    .button.primary,
+    a.button.primary,
+    a.button.primary:visited {
+      color: var(--ink);
+    }
+
+    .workflow-contrast {
+      padding: 72px 30px 18px;
+      background: #ffffff;
+    }
+
+    .workflow-intro {
+      margin-bottom: 22px;
+    }
+
+    .workflow-intro small {
+      display: inline-flex;
+      margin-bottom: 12px;
+      padding: 6px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: var(--surface);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .workflow-intro h2 {
+      max-width: 610px;
+      margin-bottom: 10px;
+      font-size: clamp(34px, 7vw, 46px);
+      line-height: 1.13;
+    }
+
+    .workflow-intro p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .workflow-card {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: #ffffff;
+    }
+
+    .workflow-card.old {
+      background: #fcf8fa;
+    }
+
+    .workflow-card.now {
+      border-color: rgba(184, 217, 90, 0.72);
+      background: var(--lime-soft);
+      box-shadow: 0 12px 32px rgba(112, 130, 54, 0.08);
+    }
+
+    .workflow-tag {
+      display: inline-flex;
+      margin-bottom: 13px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.78);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .workflow-card h3 {
+      margin: 0 0 12px;
+      font-size: 19px;
+      line-height: 1.4;
+    }
+
+    .workflow-card ul {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .workflow-card li {
+      position: relative;
+      padding-left: 20px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .workflow-card li::before {
+      content: "×";
+      position: absolute;
+      left: 0;
+      color: #000000;
+      font-weight: 800;
+    }
+
+    .workflow-card.now li::before {
+      content: "✓";
+      color: #829f20;
+    }
+
+    .workflow-result {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 12px 14px;
+      border: 1px dashed rgba(184, 217, 90, 0.9);
+      border-radius: 17px;
+      color: #526020;
+      background: #fbfff0;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .qc-preview {
+      display: grid;
+      place-items: center;
+      background: #ffffff;
+    }
+
+    .qc-preview img {
+      width: 82%;
+      height: 100%;
+      min-height: 0;
+      object-fit: contain;
+      object-position: center;
+    }
+
+    .video-preview {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .video-preview > img {
+      width: 100%;
+      height: auto;
+      min-height: 0;
+      aspect-ratio: 1672 / 941;
+      object-fit: contain;
+      object-position: center;
+      opacity: 1;
+    }
+
+    .preview-overlay {
+      position: relative;
+      z-index: 2;
+      left: auto;
+      right: auto;
+      bottom: auto;
+      margin: -18px 14px 14px;
+    }
+
+    @media (max-width: 620px) {
+      .workflow-contrast {
+        padding: 62px 16px 8px;
+      }
+
+      .workflow-intro h2 {
+        font-size: 32px;
+      }
+
+      .workflow-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .workflow-card {
+        padding: 17px;
+      }
+
+      .preview-overlay {
+        margin: -10px 10px 10px;
+        padding: 9px 10px;
+      }
+    }
+
+    /* Reference-inspired editorial layout: centered cover, narrow reading column,
+       compact hard-edged components and a fixed chapter outline on desktop. */
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 28px;
+    }
+
+    body {
+      color: #33302f;
+      background: #f7f7f5;
+    }
+
+    main {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .chapter-nav {
+      display: none;
+    }
+
+    .hero {
+      min-height: 100dvh;
+      padding: 92px 32px 104px;
+      grid-template-columns: 1fr;
+      place-content: center;
+      gap: 38px;
+      text-align: center;
+      background: transparent;
+      border-bottom: 1px solid #dcdcd7;
+    }
+
+    .hero > div:first-child {
+      width: min(100%, 780px);
+      margin-inline: auto;
+    }
+
+    .hero h1 {
+      max-width: 760px;
+      margin: 0 auto 20px;
+      font-size: clamp(46px, 6vw, 68px);
+      line-height: 1.08;
+      letter-spacing: -0.045em;
+      text-wrap: balance;
+    }
+
+    .hero-lede {
+      max-width: 690px;
+      margin-inline: auto;
+      color: #6e6966;
+      font-size: 16px;
+      line-height: 1.85;
+      text-wrap: pretty;
+    }
+
+    .hero-actions {
+      justify-content: center;
+    }
+
+    .overview {
+      max-width: 760px;
+      margin: 34px auto 0;
+    }
+
+    .hero-visual {
+      width: min(100%, 520px);
+      min-height: 0;
+      margin-inline: auto;
+      border: 2px solid #272522;
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 7px 7px 0 #dff58a;
+    }
+
+    .hero-visual img {
+      aspect-ratio: 16 / 9;
+      object-fit: contain;
+    }
+
+    .hero-badge {
+      left: 12px;
+      bottom: 12px;
+      border: 1px solid #272522;
+      border-radius: 4px;
+      box-shadow: none;
+    }
+
+    .workflow-contrast,
+    .step {
+      padding: 96px 32px 108px;
+      background: transparent;
+      border-bottom: 1px solid #dcdcd7;
+    }
+
+    .workflow-intro,
+    .step-header,
+    .workbench,
+    .workflow-grid,
+    .workflow-result {
+      width: min(100%, 780px);
+      margin-inline: auto;
+    }
+
+    .workflow-intro {
+      margin-bottom: 30px;
+    }
+
+    .workflow-intro small,
+    .workflow-tag,
+    .step-kicker {
+      border-radius: 4px;
+    }
+
+    .workflow-intro h2,
+    .step h2,
+    .completion h2 {
+      font-size: clamp(34px, 4vw, 46px);
+      line-height: 1.17;
+      letter-spacing: -0.035em;
+      text-wrap: balance;
+    }
+
+    .workflow-intro p,
+    .step-header > p {
+      max-width: 650px;
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .workflow-grid {
+      gap: 16px;
+    }
+
+    .workflow-card,
+    .workbench,
+    .upload-card,
+    .compare-card,
+    .style-card,
+    .export-card,
+    .summary-chip,
+    .probe-item,
+    .identity-checks,
+    .chapter-table-wrap,
+    .qc-preview,
+    .video-preview {
+      border-radius: 7px;
+      box-shadow: none;
+    }
+
+    .workflow-card {
+      padding: 24px;
+      border: 2px solid #272522;
+    }
+
+    .workflow-card.old {
+      background: #ffffff;
+    }
+
+    .workflow-card.now {
+      border-color: #272522;
+      background: #f1fbd0;
+    }
+
+    .workflow-result {
+      margin-top: 16px;
+      border: 1px solid #272522;
+      border-radius: 5px;
+      background: #ffffff;
+    }
+
+    .step-header {
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    .step-index {
+      letter-spacing: 0.08em;
+    }
+
+    .workbench {
+      border: 2px solid #272522;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .workbench-bar {
+      border-bottom: 2px solid #272522;
+      background: #ffffff;
+    }
+
+    .button {
+      border-radius: 5px;
+      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+    }
+
+    .button:active {
+      transform: translateY(1px);
+    }
+
+    .button:focus-visible,
+    .chapter-nav a:focus-visible {
+      outline: 3px solid #98d43e;
+      outline-offset: 3px;
+    }
+
+    .button.primary,
+    a.button.primary,
+    a.button.primary:visited {
+      border: 2px solid #272522;
+      color: #272522;
+      background: #a7dc4a;
+      box-shadow: 3px 3px 0 #272522;
+    }
+
+    .completion {
+      padding: 110px 32px 128px;
+      background: #f7f7f5;
+    }
+
+    .completion-inner {
+      width: min(100%, 780px);
+      margin-inline: auto;
+    }
+
+    .record-controls {
+      border: 1px solid #272522;
+      border-radius: 6px;
+      box-shadow: 3px 3px 0 rgba(39, 37, 34, 0.12);
+    }
+
+    @media (min-width: 961px) {
+      .topbar {
+        display: none;
+      }
+
+      main {
+        width: min(900px, calc(100% - 360px));
+        margin-left: max(56px, calc((100vw - 1220px) / 2));
+      }
+
+      .chapter-nav {
+        position: fixed;
+        z-index: 45;
+        top: 50%;
+        right: max(28px, calc((100vw - 1220px) / 2));
+        display: grid;
+        width: 194px;
+        padding: 11px;
+        border: 2px solid #272522;
+        border-radius: 6px;
+        background: #ffffff;
+        box-shadow: 5px 5px 0 rgba(39, 37, 34, 0.12);
+        transform: translateY(-50%);
+      }
+
+      .chapter-nav::before {
+        content: "页面目录";
+        padding: 7px 10px 10px;
+        color: #272522;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+      }
+
+      .chapter-nav a {
+        display: grid;
+        grid-template-columns: 18px 1fr;
+        align-items: center;
+        min-height: 36px;
+        padding: 8px 10px;
+        border-radius: 4px;
+        color: #77716d;
+        font-size: 12px;
+        text-decoration: none;
+        transition: color 180ms ease, background 180ms ease, transform 180ms ease;
+      }
+
+      .chapter-nav a:hover {
+        color: #272522;
+        background: #f0f0eb;
+      }
+
+      .chapter-nav a.active {
+        color: #272522;
+        font-weight: 800;
+        background: #a7dc4a;
+        box-shadow: 2px 2px 0 #272522;
+        transform: translate(-2px, -2px);
+      }
+
+      .chapter-nav a span {
+        color: currentColor;
+        font-size: 10px;
+      }
+    }
+
+    @media (max-width: 960px) {
+      .chapter-nav {
+        display: none;
+      }
+
+      main {
+        width: 100%;
+        margin: 0;
+      }
+
+      .hero {
+        padding-top: 118px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .hero {
+        min-height: auto;
+        padding: 118px 18px 70px;
+        gap: 28px;
+      }
+
+      .hero h1 {
+        font-size: clamp(39px, 11vw, 52px);
+      }
+
+      .hero-lede {
+        font-size: 14px;
+      }
+
+      .overview {
+        margin-top: 26px;
+      }
+
+      .workflow-contrast,
+      .step {
+        padding: 70px 18px 82px;
+      }
+
+      .workflow-intro h2,
+      .step h2,
+      .completion h2 {
+        font-size: 34px;
+      }
+
+      .workflow-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .workflow-card {
+        padding: 19px;
+      }
+
+      .completion {
+        padding: 82px 18px 100px;
+      }
+    }
+
+    /* Typography and Step 05 corrections based on the user's component library. */
+    h1,
+    h2,
+    .workflow-contrast h2,
+    .completion h2 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    h3,
+    .brand,
+    .button,
+    .eyebrow,
+    .step-kicker,
+    .step-index,
+    .workflow-contrast h3 {
+      font-family: var(--font-body);
+    }
+
+    h3,
+    .brand,
+    .button,
+    .eyebrow,
+    .step-kicker {
+      font-weight: 700;
+    }
+
+    .hero h1 {
+      letter-spacing: -0.025em;
+    }
+
+    .preview-overlay {
+      margin: 4px 14px 14px;
+    }
+
+    @media (max-width: 620px) {
+      .preview-overlay {
+        margin: 4px 10px 10px;
+      }
+    }
+
+    /* V5 · Lime Brutalism magazine cover, optional character mode and editorial ending. */
+    .hero.hero-magazine {
+      min-height: auto;
+      display: block;
+      padding: 72px 0 92px;
+      text-align: left;
+      border-bottom: 1px solid #dcdcd7;
+    }
+
+    .hero-magazine-shell {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr);
+      grid-template-rows: 54px 406px 78px;
+      grid-template-areas:
+        "kicker issue"
+        "side poster"
+        "foot agenda";
+      overflow: hidden;
+      border: 2px solid #000;
+      border-radius: 6px;
+      background: #fff;
+      box-shadow: 8px 8px 0 #000;
+    }
+
+    .hero-kicker {
+      grid-area: kicker;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      border-right: 2px solid #000;
+      border-bottom: 2px solid #000;
+      background: #c7e97a;
+      color: #000;
+      font-size: 11.5px;
+      font-weight: 800;
+      line-height: 1.35;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    .hero-issue {
+      grid-area: issue;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 0 24px;
+      border-bottom: 2px solid #000;
+      color: #000;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    .hero-side {
+      grid-area: side;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      border-right: 2px solid #000;
+      background: #efeee9;
+    }
+
+    .hero-side-main {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 20px 17px;
+    }
+
+    .hero-side-label,
+    .hero-eyeline,
+    .completion-kicker {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+    }
+
+    .hero-side-main b {
+      margin: 11px 0;
+      color: #000;
+      font-family: var(--font-display);
+      font-size: 38px;
+      font-weight: 700;
+      line-height: 0.95;
+      letter-spacing: -0.05em;
+    }
+
+    .hero-side-main p {
+      margin: 0;
+      color: #57534e;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .hero-character-note {
+      display: grid;
+      gap: 5px;
+      padding: 13px 15px;
+      border-top: 2px solid #000;
+      background: #fff;
+    }
+
+    .hero-character-note > span {
+      width: max-content;
+      padding: 3px 7px;
+      border: 1.5px solid #000;
+      border-radius: 999px;
+      background: #fde047;
+      color: #000;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+    }
+
+    .hero-character-note strong {
+      color: #000;
+      font-size: 14px;
+    }
+
+    .hero-character-note small {
+      color: #666;
+      font-size: 10px;
+      line-height: 1.55;
+    }
+
+    .hero-poster {
+      position: relative;
+      grid-area: poster;
+      overflow: hidden;
+      padding: 30px 218px 26px 32px;
+      background: #fff;
+    }
+
+    .hero-ghost {
+      position: absolute;
+      top: 4px;
+      right: -18px;
+      color: rgba(0, 0, 0, 0.045);
+      font-size: 74px;
+      font-weight: 900;
+      letter-spacing: -0.07em;
+      pointer-events: none;
+    }
+
+    .hero-eyeline {
+      position: relative;
+      z-index: 1;
+      max-width: 370px;
+      margin-bottom: 12px;
+      color: #65a30d;
+      line-height: 1.45;
+    }
+
+    .hero.hero-magazine h1 {
+      position: relative;
+      z-index: 1;
+      max-width: 480px;
+      margin: 0 0 14px;
+      color: #000;
+      font-size: clamp(42px, 4.5vw, 56px);
+      font-weight: 700;
+      line-height: 1.02;
+      letter-spacing: -0.055em;
+      text-align: left;
+    }
+
+    .hero.hero-magazine h1 span {
+      display: inline-block;
+      margin-top: 5px;
+      padding: 1px 9px 4px;
+      border: 2px solid #000;
+      background: #c7e97a;
+      box-shadow: 4px 4px 0 #000;
+      transform: rotate(-1deg);
+    }
+
+    .hero.hero-magazine .hero-lede {
+      position: relative;
+      z-index: 1;
+      max-width: 420px;
+      margin: 0 0 18px;
+      color: #4b4744;
+      font-size: 13px;
+      line-height: 1.65;
+      text-align: left;
+    }
+
+    .hero.hero-magazine .hero-actions {
+      position: relative;
+      z-index: 3;
+      justify-content: flex-start;
+    }
+
+    .hero.hero-magazine .button:not(.primary) {
+      border: 2px solid #000;
+      color: #000;
+      background: #fff;
+      box-shadow: 3px 3px 0 #000;
+    }
+
+    .hero-proof {
+      position: absolute;
+      z-index: 2;
+      right: 22px;
+      bottom: 22px;
+      width: 184px;
+      margin: 0;
+      border: 2px solid #000;
+      background: #fff;
+      box-shadow: 6px 6px 0 #c7e97a;
+      transform: rotate(1.2deg);
+    }
+
+    .hero-proof img {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: contain;
+      background: #fff;
+    }
+
+    .hero-proof figcaption {
+      padding: 7px 9px;
+      border-top: 2px solid #000;
+      color: #000;
+      font-size: 9px;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .hero-foot-note {
+      grid-area: foot;
+      display: grid;
+      place-items: center;
+      padding: 11px 14px;
+      border-top: 2px solid #000;
+      border-right: 2px solid #000;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.55;
+      text-align: center;
+    }
+
+    .hero-agenda {
+      grid-area: agenda;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      border-top: 2px solid #000;
+      background: #fff;
+    }
+
+    .hero-agenda a {
+      display: grid;
+      align-content: center;
+      gap: 6px;
+      padding: 10px 12px;
+      border-right: 2px solid #000;
+      color: #000;
+      text-decoration: none;
+      transition: transform 0.12s, background 0.12s;
+    }
+
+    .hero-agenda a:last-child {
+      border-right: 0;
+    }
+
+    .hero-agenda a:hover {
+      background: #c7e97a;
+      transform: translateY(-2px);
+    }
+
+    .hero-agenda b {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .hero-agenda span {
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .character-mode {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 16px;
+      padding: 18px;
+      border: 2px solid #000;
+      border-radius: 6px;
+      background: #efeee9;
+      box-shadow: 4px 4px 0 #000;
+    }
+
+    .character-mode > div:first-child {
+      display: grid;
+      gap: 4px;
+    }
+
+    .character-mode small {
+      color: #65a30d;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+    }
+
+    .character-mode strong {
+      color: #000;
+      font-size: 16px;
+    }
+
+    .character-mode span {
+      color: #666;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .character-mode-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .character-mode-option {
+      min-height: 42px;
+      padding: 0 14px;
+      border: 2px solid #000;
+      border-radius: 4px;
+      color: #000;
+      background: #fff;
+      box-shadow: 2px 2px 0 #000;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+    }
+
+    .character-mode-option:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 #000;
+    }
+
+    .character-mode-option:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 #000;
+    }
+
+    .character-mode-option.active {
+      background: #c7e97a;
+    }
+
+    .character-upload.is-disabled {
+      border-style: solid;
+      border-color: #b9b7b2;
+      color: #888;
+      background: #efeee9;
+      opacity: 0.62;
+      transform: none;
+      cursor: not-allowed;
+    }
+
+    body.no-character-mode .style-runner,
+    body.no-character-mode .preview-runner {
+      display: none;
+    }
+
+    .character-skip-panel {
+      position: relative;
+      overflow: hidden;
+      min-height: 330px;
+      align-content: center;
+      justify-items: start;
+      gap: 12px;
+      padding: clamp(30px, 6vw, 58px);
+      border: 2px solid #000;
+      border-radius: 6px;
+      background: #c7e97a;
+      box-shadow: 5px 5px 0 #000;
+    }
+
+    .character-skip-panel:not([hidden]) {
+      display: grid;
+    }
+
+    .character-skip-panel::after {
+      content: "NO IP";
+      position: absolute;
+      right: -16px;
+      bottom: -24px;
+      color: rgba(255, 255, 255, 0.48);
+      font-size: 94px;
+      font-weight: 900;
+      letter-spacing: -0.08em;
+      pointer-events: none;
+    }
+
+    .character-skip-panel > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .character-skip-panel > span {
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.13em;
+    }
+
+    .character-skip-panel h3 {
+      margin: 0;
+      color: #000;
+      font-family: var(--font-display);
+      font-size: 34px;
+      font-weight: 700;
+    }
+
+    .character-skip-panel p {
+      max-width: 540px;
+      margin: 0;
+      color: #333;
+      font-size: 13px;
+      line-height: 1.75;
+    }
+
+    .ip-custom-flow {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      align-items: center;
+      gap: 24px;
+      margin-top: 16px;
+      padding: 22px;
+      border: 2px solid #000;
+      border-radius: 6px;
+      background: #efeee9;
+      box-shadow: 4px 4px 0 #000;
+    }
+
+    .ip-custom-copy small {
+      color: #65a30d;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+    }
+
+    .ip-custom-copy h3 {
+      margin: 7px 0 8px;
+      color: #000;
+      font-family: var(--font-display);
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    .ip-custom-copy p {
+      margin: 0;
+      color: #666;
+      font-size: 11px;
+      line-height: 1.65;
+    }
+
+    .ip-custom-steps {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ip-custom-steps span {
+      min-height: 86px;
+      display: grid;
+      align-content: center;
+      gap: 6px;
+      padding: 12px;
+      border: 2px solid #000;
+      border-radius: 4px;
+      background: #fff;
+      color: #000;
+      font-size: 10px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .ip-custom-steps b {
+      color: #65a30d;
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    .ip-custom-steps i {
+      color: #000;
+      font-style: normal;
+      font-weight: 900;
+    }
+
+    .completion {
+      position: relative;
+      min-height: auto;
+      display: block;
+      overflow: hidden;
+      padding: 112px 0 54px;
+      text-align: left;
+      background: transparent;
+    }
+
+    .completion-inner {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      margin: 0;
+      border: 2px solid #000;
+      border-radius: 6px;
+      background: #fff;
+      box-shadow: 8px 8px 0 #000;
+    }
+
+    .completion-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 52px;
+      padding: 0 20px;
+      border-bottom: 2px solid #000;
+      color: #000;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.13em;
+    }
+
+    .completion-grid {
+      display: grid;
+      grid-template-columns: 1.12fr 0.88fr;
+      min-height: 500px;
+    }
+
+    .completion-statement {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+      padding: clamp(38px, 6vw, 68px);
+      border-right: 2px solid #000;
+      background: #fff;
+    }
+
+    .completion-ghost {
+      position: absolute;
+      top: 0;
+      left: -12px;
+      color: rgba(0, 0, 0, 0.045);
+      font-size: 126px;
+      font-weight: 900;
+      letter-spacing: -0.08em;
+      pointer-events: none;
+    }
+
+    .completion-kicker {
+      position: relative;
+      z-index: 1;
+      width: max-content;
+      margin: 0 0 18px;
+      padding: 6px 9px;
+      border: 1.5px solid #000;
+      background: #efeee9;
+      color: #000;
+    }
+
+    .completion h2 {
+      position: relative;
+      z-index: 1;
+      margin: 0 0 22px;
+      color: #000;
+      font-size: clamp(40px, 5vw, 56px);
+      line-height: 1.08;
+      letter-spacing: -0.045em;
+      text-align: left;
+    }
+
+    .completion h2 em {
+      display: inline;
+      padding: 0 4px;
+      border-bottom: 4px solid #000;
+      background: #c7e97a;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+    }
+
+    .completion-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 520px;
+      margin: 0 0 26px;
+      color: #55514e;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .completion-cta {
+      position: relative;
+      z-index: 1;
+      width: max-content;
+    }
+
+    .completion-deliverables {
+      display: grid;
+      grid-template-rows: 0.9fr auto;
+      background: #efeee9;
+    }
+
+    .completion-proof {
+      position: relative;
+      min-height: 260px;
+      display: grid;
+      place-items: center;
+      margin: 0;
+      padding: 22px;
+      border-bottom: 2px solid #000;
+      background: #fff;
+    }
+
+    .completion-proof img {
+      width: 100%;
+      max-height: 250px;
+      margin: 0;
+      object-fit: contain;
+    }
+
+    .completion-proof figcaption {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      padding: 6px 8px;
+      border: 1.5px solid #000;
+      background: #fde047;
+      color: #000;
+      font-size: 9px;
+      font-weight: 900;
+      transform: rotate(-1.5deg);
+    }
+
+    .completion-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .completion-list > div {
+      min-height: 128px;
+      display: grid;
+      align-content: center;
+      gap: 5px;
+      padding: 15px 12px;
+      border-right: 2px solid #000;
+      color: #000;
+    }
+
+    .completion-list > div:last-child {
+      border-right: 0;
+    }
+
+    .completion-list b {
+      color: #65a30d;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .completion-list span {
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .completion-list small {
+      color: #666;
+      font-size: 9px;
+      line-height: 1.45;
+    }
+
+    .completion-ribbon {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+      align-items: center;
+      gap: 10px;
+      min-height: 64px;
+      padding: 0 24px;
+      border-top: 2px solid #000;
+      background: #c7e97a;
+      color: #000;
+      text-align: center;
+    }
+
+    .completion-ribbon span {
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .completion-ribbon i {
+      font-style: normal;
+      font-weight: 900;
+    }
+
+    .completion-shape {
+      position: absolute;
+      z-index: 1;
+      display: block;
+      border: 2px solid #000;
+      pointer-events: none;
+    }
+
+    .completion-shape-a {
+      top: 76px;
+      right: -20px;
+      width: 72px;
+      aspect-ratio: 1;
+      background: #fde047;
+      transform: rotate(14deg);
+    }
+
+    .completion-shape-b {
+      left: -24px;
+      bottom: 26px;
+      width: 54px;
+      aspect-ratio: 1;
+      background: #c7e97a;
+      transform: rotate(-11deg);
+    }
+
+    .hero.hero-magazine > .hero-magazine-shell {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+    }
+
+    @media (max-width: 820px) {
+      .hero-magazine-shell {
+        grid-template-columns: 145px minmax(0, 1fr);
+      }
+
+      .hero-poster {
+        padding-right: 230px;
+      }
+
+      .hero-proof {
+        width: 198px;
+      }
+
+      .hero.hero-magazine h1 {
+        font-size: 46px;
+      }
+
+      .character-mode {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .hero.hero-magazine {
+        padding: 106px 14px 78px;
+      }
+
+      .hero-magazine-shell {
+        min-height: 0;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        grid-template-areas:
+          "kicker"
+          "issue"
+          "poster"
+          "side"
+          "agenda"
+          "foot";
+        box-shadow: 5px 5px 0 #000;
+      }
+
+      .hero-kicker,
+      .hero-issue,
+      .hero-side,
+      .hero-foot-note {
+        border-right: 0;
+      }
+
+      .hero-kicker {
+        min-height: 48px;
+        border-bottom: 2px solid #000;
+      }
+
+      .hero-issue {
+        min-height: 48px;
+        padding: 0 16px;
+      }
+
+      .hero-poster {
+        padding: 34px 20px 26px;
+      }
+
+      .hero-ghost {
+        top: 20px;
+        right: -8px;
+        font-size: 57px;
+      }
+
+      .hero.hero-magazine h1 {
+        max-width: 100%;
+        font-size: clamp(42px, 13vw, 56px);
+      }
+
+      .hero.hero-magazine .hero-lede {
+        font-size: 13px;
+      }
+
+      .hero-proof {
+        position: relative;
+        right: auto;
+        bottom: auto;
+        width: 100%;
+        margin-top: 30px;
+        transform: rotate(0.5deg);
+      }
+
+      .hero-side {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
+        border-top: 2px solid #000;
+      }
+
+      .hero-side-main {
+        border-right: 2px solid #000;
+      }
+
+      .hero-character-note {
+        align-content: center;
+        border-top: 0;
+      }
+
+      .hero-agenda {
+        grid-template-columns: repeat(5, minmax(92px, 1fr));
+        overflow-x: auto;
+      }
+
+      .hero-agenda a {
+        min-width: 92px;
+      }
+
+      .character-mode {
+        padding: 15px;
+        box-shadow: 3px 3px 0 #000;
+      }
+
+      .character-mode-options {
+        grid-template-columns: 1fr;
+      }
+
+      .ip-custom-flow {
+        grid-template-columns: 1fr;
+        padding: 17px;
+      }
+
+      .ip-custom-steps {
+        grid-template-columns: 1fr;
+      }
+
+      .ip-custom-steps i {
+        text-align: center;
+        transform: rotate(90deg);
+      }
+
+      .completion {
+        padding: 84px 14px 50px;
+      }
+
+      .completion-inner {
+        box-shadow: 5px 5px 0 #000;
+      }
+
+      .completion-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .completion-statement {
+        padding: 44px 24px;
+        border-right: 0;
+        border-bottom: 2px solid #000;
+      }
+
+      .completion h2 {
+        font-size: clamp(38px, 11vw, 48px);
+      }
+
+      .completion-list {
+        grid-template-columns: 1fr;
+      }
+
+      .completion-list > div {
+        min-height: 84px;
+        grid-template-columns: 42px 1fr;
+        align-items: center;
+        gap: 4px 10px;
+        border-right: 0;
+        border-bottom: 2px solid #000;
+      }
+
+      .completion-list > div:last-child {
+        border-bottom: 0;
+      }
+
+      .completion-list b {
+        grid-row: 1 / span 2;
+      }
+
+      .completion-ribbon {
+        grid-template-columns: 1fr;
+        gap: 5px;
+        padding: 16px;
+      }
+
+      .completion-ribbon i {
+        transform: rotate(90deg);
+      }
+    }
+
+    /* V6 compatibility layer · colors are normalized again by the V7 lime system below. */
+    :root {
+      --lime: #c7e97a;
+      --lime-deep: #84cc16;
+      --lime-soft: #f1fbd0;
+      --accent: #c7e97a;
+      --accent-soft: #f1fbd0;
+      --accent-deep: #65a30d;
+      --ink: #2f292c;
+      --muted: #887c82;
+      --line: #eadfe4;
+      --page: #f7f7f4;
+      --surface: #ffffff;
+    }
+
+    html {
+      background: var(--page);
+    }
+
+    body {
+      background: var(--page);
+      color: var(--ink);
+      font-family: "Source Han Sans SC", "Noto Sans CJK SC", "PingFang SC", sans-serif;
+    }
+
+    .topbar {
+      height: 76px;
+      padding: 0 28px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 8px 28px rgba(74, 48, 59, 0.05);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand-mark,
+    .status-pill,
+    .button.primary,
+    .workflow-card.now .workflow-tag,
+    .character-mode-option.active,
+    .motion-mode-option.active,
+    .style-card.selected .style-code,
+    .export-card.featured .export-tag {
+      border-color: var(--accent-deep);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .status-pill,
+    .button,
+    .character-mode-option,
+    .motion-mode-option {
+      border-radius: 14px;
+      box-shadow: none;
+    }
+
+    .top-progress-track {
+      background: #f6e4eb;
+    }
+
+    .top-progress-fill {
+      background: linear-gradient(90deg, #c7e97a, #84cc16);
+    }
+
+    .top-progress-labels span.active,
+    .chapter-nav a.active,
+    .step-index,
+    .hero-eyeline,
+    .completion-kicker {
+      color: var(--accent-deep);
+    }
+
+    .chapter-nav {
+      left: 20px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 16px 42px rgba(74, 48, 59, 0.08);
+    }
+
+    .chapter-nav a {
+      border-radius: 10px;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 40px));
+      background: var(--page);
+    }
+
+    .hero.hero-magazine {
+      min-height: auto;
+      padding: 118px 34px 78px;
+      background: var(--page);
+    }
+
+    .hero-magazine-shell {
+      max-width: 1220px;
+      min-height: 0;
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      background: #fff;
+      box-shadow: 0 24px 70px rgba(74, 48, 59, 0.11);
+      overflow: hidden;
+    }
+
+    .hero-kicker,
+    .hero-issue,
+    .hero-side,
+    .hero-side-main,
+    .hero-character-note,
+    .hero-poster,
+    .hero-foot-note,
+    .hero-agenda,
+    .hero-agenda a,
+    .hero-proof,
+    .completion-topline,
+    .completion-statement,
+    .completion-proof,
+    .completion-list > div,
+    .completion-ribbon {
+      border-color: var(--line);
+    }
+
+    .hero-kicker {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .hero-side,
+    .hero-foot-note {
+      background: #fffafa;
+    }
+
+    .hero-character-note > span {
+      border-color: #c66b8c;
+      background: #ffe1ec;
+      color: #8b3f5e;
+    }
+
+    .hero.hero-magazine h1,
+    .step h2,
+    .completion h2 {
+      font-family: "Source Han Sans SC", "Noto Sans CJK SC", "PingFang SC", sans-serif;
+      font-weight: 800;
+      letter-spacing: -0.055em;
+    }
+
+    .hero.hero-magazine h1 span,
+    .step h2 em,
+    .workflow-intro h2 em,
+    .completion h2 em {
+      background: linear-gradient(transparent 72%, #c7e97a 72%);
+      color: inherit;
+    }
+
+    .hero.hero-magazine h1 span {
+      margin-top: 5px;
+      padding: 1px 9px 4px;
+      border: 0;
+      border-radius: 8px;
+      background: #c7e97a;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .hero-ghost,
+    .completion-ghost {
+      color: #f7eef2;
+    }
+
+    .hero-proof {
+      border-radius: 22px;
+      background: #fff;
+      box-shadow: 0 14px 34px rgba(82, 54, 65, 0.1);
+      transform: rotate(-1deg);
+      overflow: hidden;
+    }
+
+    .button,
+    a.button,
+    a.button:visited {
+      min-height: 48px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      font-weight: 750;
+    }
+
+    .button.primary,
+    a.button.primary,
+    a.button.primary:visited {
+      border: 1px solid var(--accent-deep);
+      background: var(--accent);
+      color: #fff;
+      box-shadow: none;
+    }
+
+    .hero.hero-magazine .button:not(.primary) {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      box-shadow: none;
+    }
+
+    .chapter-nav {
+      display: none;
+    }
+
+    .chapter-nav a.active {
+      background: var(--lime-soft);
+      color: var(--accent-deep);
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(100, 62, 77, 0.12);
+    }
+
+    .hero-agenda a:hover,
+    .hero-agenda a:first-child {
+      background: var(--lime-soft);
+    }
+
+    .workflow-contrast,
+    .step,
+    .completion {
+      background: var(--page);
+    }
+
+    .workflow-contrast,
+    .step {
+      border-top: 1px solid var(--line);
+    }
+
+    .workflow-card,
+    .workflow-result,
+    .workbench,
+    .character-mode,
+    .motion-mode,
+    .compare-card,
+    .ip-custom-flow,
+    .walk-cycle,
+    .style-card,
+    .color-lab,
+    .export-card,
+    .completion-inner {
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      background: #fff;
+      box-shadow: 0 18px 48px rgba(74, 48, 59, 0.07);
+    }
+
+    .workflow-card.old {
+      background: #fbfbf9;
+    }
+
+    .workflow-card.now,
+    .workflow-result,
+    .system-note {
+      background: var(--lime-soft);
+      border-color: #f1c7d7;
+    }
+
+    .workflow-result {
+      color: #000000;
+    }
+
+    .workbench {
+      overflow: hidden;
+      box-shadow: 0 24px 70px rgba(74, 48, 59, 0.09);
+    }
+
+    .workbench-bar {
+      min-height: 62px;
+      border-bottom: 1px solid var(--line);
+      background: #fffafb;
+    }
+
+    .workbench-bar > i:first-child { background: #fde047; }
+    .workbench-bar > i:nth-child(2) { background: #c7e97a; }
+    .workbench-bar > i:nth-child(3) { background: #84cc16; }
+
+    .upload-card,
+    .probe-panel,
+    .summary-chip,
+    .chapter-table-wrap,
+    .swatch-panel,
+    .video-preview,
+    .approval-gates {
+      border-color: var(--line);
+      border-radius: 20px;
+      background: #fff;
+    }
+
+    .upload-card:hover,
+    .upload-card.loaded,
+    .style-card:hover,
+    .style-card.selected {
+      border-color: var(--accent);
+      background: #fff8fb;
+      box-shadow: 0 14px 34px rgba(188, 93, 130, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .character-mode,
+    .motion-mode {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 24px;
+      padding: 22px;
+      box-shadow: none;
+    }
+
+    .motion-mode > div:first-child {
+      display: grid;
+      gap: 7px;
+    }
+
+    .motion-mode small {
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    .motion-mode strong {
+      font-size: 22px;
+    }
+
+    .motion-mode span {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .motion-mode-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(150px, 1fr));
+      gap: 10px;
+    }
+
+    .motion-mode-option {
+      display: grid;
+      gap: 5px;
+      min-height: 72px;
+      padding: 12px 18px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .motion-mode-option b {
+      font-size: 16px;
+    }
+
+    .motion-mode-option small {
+      color: inherit;
+      opacity: 0.76;
+      letter-spacing: 0;
+    }
+
+    .walk-cycle {
+      padding: 20px;
+      box-shadow: none;
+    }
+
+    .walk-cycle > header {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    .walk-cycle > header span,
+    .walk-cycle > p {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .walk-frames {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .walk-frames figure {
+      margin: 0;
+      padding: 12px 10px 9px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background-color: #fbfbf9;
+      background-image:
+        linear-gradient(45deg, #f1efeb 25%, transparent 25%),
+        linear-gradient(-45deg, #f1efeb 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #f1efeb 75%),
+        linear-gradient(-45deg, transparent 75%, #f1efeb 75%);
+      background-size: 18px 18px;
+      background-position: 0 0, 0 9px, 9px -9px, -9px 0;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .walk-frames img {
+      width: 100%;
+      height: 150px;
+      object-fit: contain;
+      transform-origin: 50% 100%;
+    }
+
+    .walk-frames figure:nth-child(1) img,
+    .walk-frames figure:nth-child(2) img,
+    .walk-frames figure:nth-child(3) img,
+    .walk-frames figure:nth-child(4) img { transform: none; }
+
+    .walk-frames figcaption {
+      margin-top: 6px;
+      color: #6f6268;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .chapter-table-wrap th {
+      background: #fff4f8;
+    }
+
+    .timeline-segment,
+    .capsules span.active,
+    .text-chapters span.active,
+    .band-chapters span.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .style-code,
+    .placement,
+    .export-tag {
+      border-radius: 999px;
+    }
+
+    .preview-overlay {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 16px 36px rgba(74, 48, 59, 0.12);
+    }
+
+    .completion {
+      padding-top: 96px;
+    }
+
+    .completion-inner {
+      overflow: hidden;
+      box-shadow: 0 28px 80px rgba(74, 48, 59, 0.11);
+    }
+
+    .completion-statement,
+    .completion-deliverables {
+      background: #fff;
+    }
+
+    .completion-list b {
+      color: var(--accent-deep);
+    }
+
+    .completion-ribbon {
+      background: #c7e97a;
+      color: #000000;
+    }
+
+    .completion-shape {
+      border: 0;
+      border-radius: 50%;
+      background: #f5b8cf;
+      opacity: .65;
+    }
+
+    @media (max-width: 820px) {
+      .character-mode,
+      .motion-mode {
+        grid-template-columns: 1fr;
+      }
+
+      .walk-frames {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 620px) {
+      .topbar {
+        padding: 0 14px;
+      }
+
+      .hero-magazine-shell,
+      .completion-inner {
+        border-radius: 22px;
+        box-shadow: 0 18px 46px rgba(74, 48, 59, 0.1);
+      }
+
+      .hero-kicker,
+      .hero-issue,
+      .hero-side-main,
+      .hero-character-note,
+      .completion-statement,
+      .completion-list > div,
+      .completion-ribbon {
+        border-color: var(--line);
+      }
+
+      .motion-mode-options,
+      .walk-frames {
+        grid-template-columns: 1fr;
+      }
+
+      .walk-frames img {
+        height: 180px;
+      }
+    }
+
+    /* V7 · 用户定稿：Lime Brutalism 内页设计系统。粉色退出主视觉。 */
+    :root {
+      --lime: #c7e97a;
+      --lime-deep: #84cc16;
+      --lime-soft: #f1fbd0;
+      --accent: #c7e97a;
+      --accent-soft: #f1fbd0;
+      --accent-deep: #65a30d;
+      --accent-text: #000000;
+      --ink: #000000;
+      --muted: #666666;
+      --line: #000000;
+      --page: #f7f7f7;
+      --surface: #ffffff;
+      --surface-strong: #efeee9;
+      --shadow: 3px 3px 0 #000000;
+      --radius-xl: 6px;
+      --radius-lg: 6px;
+      --radius-md: 6px;
+      --radius-sm: 4px;
+    }
+
+    html,
+    body,
+    main {
+      background: var(--page);
+      color: var(--ink);
+    }
+
+    ::selection {
+      background: var(--lime);
+      color: #000;
+    }
+
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--page); border-left: 2px solid #000; }
+    ::-webkit-scrollbar-thumb { background: var(--lime-deep); border: 2px solid #000; }
+
+    .topbar {
+      height: 76px;
+      border-bottom: 2px solid #000;
+      background: rgba(255, 255, 255, 0.97);
+      box-shadow: none;
+      backdrop-filter: none;
+    }
+
+    .brand-mark {
+      border: 2px solid #000;
+      border-radius: 4px;
+      background: var(--lime);
+      color: #000;
+      box-shadow: 2px 2px 0 #000;
+    }
+
+    .top-progress-track {
+      height: 8px;
+      border: 1.5px solid #000;
+      border-radius: 4px;
+      background: #efeee9;
+    }
+
+    .top-progress-fill {
+      border-radius: 0;
+      background: var(--lime-deep);
+    }
+
+    .top-progress-labels span.active { color: #000; }
+
+    .status-pill {
+      border: 1.5px solid #000;
+      border-radius: 4px;
+      background: #fff;
+      color: #000;
+      box-shadow: 2px 2px 0 #000;
+    }
+
+    .status-pill::before {
+      background: var(--lime-deep);
+      box-shadow: none;
+    }
+
+    .hero.hero-magazine {
+      padding: 118px 34px 78px;
+      background: var(--page);
+      border-bottom: 2px solid #000;
+    }
+
+    .hero-magazine-shell {
+      border: 2px solid #000;
+      border-radius: 6px;
+      background: #fff;
+      box-shadow: 8px 8px 0 #000;
+    }
+
+    .hero-kicker,
+    .hero-issue,
+    .hero-side,
+    .hero-side-main,
+    .hero-character-note,
+    .hero-poster,
+    .hero-foot-note,
+    .hero-agenda,
+    .hero-agenda a,
+    .hero-proof {
+      border-color: #000;
+    }
+
+    .hero-kicker {
+      background: var(--lime);
+      color: #000;
+    }
+
+    .hero-side { background: #efeee9; }
+    .hero-side-main,
+    .hero-character-note,
+    .hero-poster { background: #fff; }
+
+    .hero-character-note > span {
+      border-color: #000;
+      background: #fde047;
+      color: #000;
+    }
+
+    .hero.hero-magazine h1,
+    .step h2,
+    .workflow-intro h2,
+    .completion h2 {
+      color: #000;
+      font-family: var(--font-display);
+      font-weight: 800;
+    }
+
+    .hero.hero-magazine h1 span {
+      border: 2px solid #000;
+      border-radius: 0;
+      background: var(--lime);
+      box-shadow: 4px 4px 0 #000;
+      transform: rotate(-1deg);
+    }
+
+    .step h2 em,
+    .workflow-intro h2 em,
+    .completion h2 em {
+      background: linear-gradient(transparent 55%, var(--lime) 55%);
+      color: inherit;
+    }
+
+    .hero-ghost,
+    .completion-ghost { color: rgba(0, 0, 0, 0.055); }
+
+    .hero-eyeline,
+    .step-index,
+    .completion-kicker { color: var(--accent-deep); }
+
+    .hero-proof {
+      border-radius: 4px;
+      background: #fff;
+      box-shadow: 6px 6px 0 var(--lime);
+      transform: rotate(1.2deg);
+    }
+
+    .button,
+    a.button,
+    a.button:visited,
+    .character-mode-option,
+    .motion-mode-option {
+      border: 2px solid #000;
+      border-radius: 4px;
+      background: #fff;
+      color: #000;
+      box-shadow: 3px 3px 0 #000;
+    }
+
+    .button.primary,
+    a.button.primary,
+    a.button.primary:visited,
+    .character-mode-option.active,
+    .motion-mode-option.active {
+      border-color: #000;
+      background: var(--lime);
+      color: #000;
+      box-shadow: 3px 3px 0 #000;
+    }
+
+    .button:hover,
+    .character-mode-option:hover,
+    .motion-mode-option:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 5px 5px 0 #000;
+    }
+
+    .button:active,
+    .character-mode-option:active,
+    .motion-mode-option:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 #000;
+    }
+
+    .hero-agenda a:first-child,
+    .hero-agenda a:hover { background: var(--lime); }
+
+    .workflow-contrast,
+    .step,
+    .completion {
+      background: var(--page);
+      border-color: #000;
+    }
+
+    .workflow-contrast,
+    .step { border-top: 2px solid #000; }
+
+    .workflow-card,
+    .workflow-result,
+    .workbench,
+    .character-mode,
+    .motion-mode,
+    .compare-card,
+    .ip-custom-flow,
+    .walk-cycle,
+    .style-card,
+    .color-lab,
+    .export-card,
+    .completion-inner,
+    .upload-card,
+    .probe-panel,
+    .summary-chip,
+    .chapter-table-wrap,
+    .swatch-panel,
+    .video-preview,
+    .approval-gates,
+    .preview-overlay {
+      border: 2px solid #000;
+      border-radius: 6px;
+      background: #fff;
+      box-shadow: 3px 3px 0 #000;
+    }
+
+    .workflow-card.old { background: #efeee9; }
+
+    .workflow-card.now,
+    .workflow-result,
+    .system-note {
+      border-color: #000;
+      background: var(--lime-soft);
+      color: #000;
+    }
+
+    .workflow-result { color: #000; }
+
+    .workbench {
+      overflow: hidden;
+      box-shadow: 5px 5px 0 #000;
+    }
+
+    .workbench-bar {
+      border-bottom: 2px solid #000;
+      background: #efeee9;
+    }
+
+    .workbench-bar > i:first-child { background: #fde047; }
+    .workbench-bar > i:nth-child(2) { background: var(--lime); }
+    .workbench-bar > i:nth-child(3) { background: var(--lime-deep); }
+
+    .upload-card:hover,
+    .upload-card.loaded,
+    .style-card:hover,
+    .style-card.selected {
+      border-color: #000;
+      background: var(--lime-soft);
+      box-shadow: 5px 5px 0 #000;
+      transform: translate(-1px, -1px);
+    }
+
+    .chapter-table-wrap th { background: var(--lime-soft); }
+
+    .timeline-segment,
+    .capsules span.active,
+    .text-chapters span.active,
+    .band-chapters span.active,
+    .style-card.selected .style-code,
+    .export-card.featured .export-tag {
+      background: var(--lime);
+      color: #000;
+    }
+
+    .style-code,
+    .placement,
+    .export-tag { border-radius: 4px; }
+
+    .preview-overlay {
+      background: rgba(255, 255, 255, 0.97);
+      box-shadow: 5px 5px 0 #000;
+    }
+
+    .walk-frames figure {
+      border: 2px solid #000;
+      border-radius: 4px;
+    }
+
+    .completion-inner { box-shadow: 8px 8px 0 #000; }
+
+    .completion-topline,
+    .completion-statement,
+    .completion-proof,
+    .completion-list > div,
+    .completion-ribbon { border-color: #000; }
+
+    .completion-statement,
+    .completion-deliverables,
+    .completion-proof { background: #fff; }
+
+    .completion-list b { color: var(--accent-deep); }
+
+    .completion-ribbon {
+      background: var(--lime);
+      color: #000;
+    }
+
+    .completion-shape {
+      border: 2px solid #000;
+      border-radius: 0;
+      opacity: 1;
+    }
+
+    .completion-shape-a { background: #fde047; }
+    .completion-shape-b { background: var(--lime); }
+
+    /* Step 04 · one custom-reference route beside the four presets. */
+    .reference-style-lab {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(280px, .88fr);
+      gap: 22px;
+      margin-top: 22px;
+      padding: 22px;
+      border: 2px dashed #000;
+      border-radius: 6px;
+      background: #efeee9;
+      box-shadow: 3px 3px 0 #000;
+    }
+
+    .reference-style-lab.selected {
+      border-style: solid;
+      background: var(--lime-soft);
+      box-shadow: 5px 5px 0 #000;
+    }
+
+    .reference-style-copy {
+      align-self: center;
+    }
+
+    .reference-kicker {
+      color: var(--lime-deep);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .12em;
+    }
+
+    .reference-style-copy h3 {
+      margin: 8px 0 10px;
+      color: #000;
+      font-family: var(--font-display);
+      font-size: clamp(24px, 3vw, 34px);
+      font-weight: 700;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .reference-title-line {
+      display: inline-block;
+      max-width: 100%;
+      white-space: nowrap;
+    }
+
+    .reference-style-copy h3 em {
+      padding-inline: 5px;
+      background: var(--lime);
+      font-style: normal;
+      white-space: nowrap;
+    }
+
+    .reference-style-copy p {
+      max-width: 600px;
+      margin: 0;
+      color: #57534e;
+      font-size: 11px;
+      line-height: 1.75;
+    }
+
+    .reference-flow {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 15px;
+    }
+
+    .reference-flow span {
+      padding: 6px 8px;
+      border: 1.5px solid #000;
+      border-radius: 999px;
+      background: #fff;
+      color: #000;
+      font-size: 9px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .reference-flow i {
+      color: #000;
+      font-style: normal;
+      font-size: 10px;
+    }
+
+    .reference-upload-button {
+      display: inline-flex;
+      align-items: center;
+      min-height: 40px;
+      margin-top: 16px;
+      padding: 0 13px;
+      border: 2px solid #000;
+      border-radius: 4px;
+      background: var(--lime);
+      color: #000;
+      box-shadow: 3px 3px 0 #000;
+      font-size: 10px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .reference-upload-button:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 5px 5px 0 #000;
+    }
+
+    .reference-upload-button input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .reference-preview {
+      display: grid;
+      grid-template-rows: minmax(190px, 1fr) auto;
+      min-width: 0;
+      overflow: hidden;
+      border: 2px solid #000;
+      border-radius: 5px;
+      background: #fff;
+    }
+
+    .reference-preview img {
+      width: 100%;
+      height: 210px;
+      padding: 12px;
+      object-fit: contain;
+      background: #fff;
+    }
+
+    .reference-preview img[hidden] {
+      display: none !important;
+    }
+
+    .reference-empty {
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 5px;
+      min-height: 210px;
+      padding: 18px;
+      color: #57534e;
+      text-align: center;
+    }
+
+    .reference-empty[hidden] {
+      display: none;
+    }
+
+    .reference-empty b {
+      color: #000;
+      font-size: 30px;
+      font-weight: 400;
+    }
+
+    .reference-empty span {
+      color: #000;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .reference-empty small {
+      font-size: 9px;
+      line-height: 1.5;
+    }
+
+    .reference-file-name {
+      padding: 9px 11px;
+      overflow: hidden;
+      border-top: 2px solid #000;
+      color: #57534e;
+      font-size: 9px;
+      font-weight: 800;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .completion-list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    /* Step 02: real 4-frame gait preview. */
+    .generated-preview {
+      isolation: isolate;
+    }
+
+    .single-pose-preview,
+    .four-frame-player {
+      grid-area: 1 / 1;
+    }
+
+    .single-pose-preview {
+      width: 82%;
+      height: 310px;
+      object-fit: contain;
+      animation: idleWalk 1.05s ease-in-out infinite alternate;
+      filter: drop-shadow(0 10px 10px rgba(28, 34, 22, 0.1));
+    }
+
+    .four-frame-player {
+      position: relative;
+      width: 82%;
+      height: 310px;
+    }
+
+    .four-frame-player img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      opacity: 0;
+      filter: drop-shadow(0 10px 10px rgba(28, 34, 22, 0.1));
+      animation-duration: .666667s;
+      animation-timing-function: steps(1, end);
+      animation-iteration-count: infinite;
+    }
+
+    .four-frame-player img:nth-child(1) { animation-name: gaitFrameOne; }
+    .four-frame-player img:nth-child(2) { animation-name: gaitFrameTwo; }
+    .four-frame-player img:nth-child(3) { animation-name: gaitFrameThree; }
+    .four-frame-player img:nth-child(4) { animation-name: gaitFrameFour; }
+
+    @keyframes gaitFrameOne {
+      0%, 24.99% { opacity: 1; }
+      25%, 100% { opacity: 0; }
+    }
+
+    @keyframes gaitFrameTwo {
+      0%, 24.99% { opacity: 0; }
+      25%, 49.99% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    @keyframes gaitFrameThree {
+      0%, 49.99% { opacity: 0; }
+      50%, 74.99% { opacity: 1; }
+      75%, 100% { opacity: 0; }
+    }
+
+    @keyframes gaitFrameFour {
+      0%, 74.99% { opacity: 0; }
+      75%, 100% { opacity: 1; }
+    }
+
+    .playback-badge {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      z-index: 2;
+      padding: 7px 10px;
+      border: 2px solid #000;
+      border-radius: 999px;
+      background: var(--lime);
+      color: #000;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      box-shadow: 2px 2px 0 #000;
+    }
+
+    body:not(.single-motion-mode) .single-pose-preview { display: none; }
+    body.single-motion-mode .four-frame-player { display: none; }
+
+    @media (max-width: 560px) {
+      .single-pose-preview,
+      .four-frame-player { height: 250px; }
+
+      .reference-style-lab {
+        grid-template-columns: 1fr;
+        padding: 15px;
+      }
+
+      .reference-style-copy h3 {
+        font-size: 25px;
+      }
+
+      .reference-preview img,
+      .reference-empty {
+        height: 170px;
+        min-height: 170px;
+      }
+
+      .completion-list {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .hero-magazine-shell,
+      .completion-inner {
+        border-radius: 6px;
+        box-shadow: 5px 5px 0 #000;
+      }
+
+      .hero-kicker,
+      .hero-issue,
+      .hero-side-main,
+      .hero-character-note,
+      .completion-statement,
+      .completion-list > div,
+      .completion-ribbon { border-color: #000; }
+
+      .completion {
+        scroll-margin-top: 76px;
+      }
+
+      .completion h2 {
+        font-size: 34px;
+        letter-spacing: -.04em;
+      }
+    }
+
+    /* V8 · Restore the approved continuous scroll-story composition.
+       One framed story column, one shared content width, and one connected
+       chapter rail on the right. This resolves the old narrow-column and
+       left-navigation compatibility rules in one final layout layer. */
+    @media (min-width: 1101px) {
+      .topbar {
+        display: none;
+      }
+
+      main {
+        width: min(1180px, calc(100vw - 330px));
+        margin: 34px 0 116px max(32px, calc((100vw - 1500px) / 2));
+        padding: 0;
+        overflow: hidden;
+        border: 2px solid #000;
+        border-radius: 6px;
+        background: #fff;
+        box-shadow: 8px 8px 0 #000;
+      }
+
+      .hero.hero-magazine,
+      .workflow-contrast,
+      .step,
+      .completion {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding-inline: 38px;
+        border: 0;
+        border-bottom: 2px solid #000;
+        background: #fff;
+      }
+
+      .completion {
+        border-bottom: 0;
+      }
+
+      .hero-magazine-shell {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .workflow-intro,
+      .workflow-grid,
+      .workflow-result,
+      .step-header,
+      .step > .workbench,
+      .completion-inner {
+        width: 100%;
+        max-width: none;
+        margin-inline: 0;
+      }
+
+      .chapter-nav {
+        --page-progress: 0%;
+        position: fixed;
+        z-index: 45;
+        top: 50%;
+        right: max(32px, calc((100vw - 1500px) / 2));
+        left: auto;
+        display: grid;
+        width: 220px;
+        padding: 12px 12px 14px;
+        overflow: hidden;
+        border: 2px solid #000;
+        border-radius: 6px;
+        background: #fff;
+        box-shadow: 5px 5px 0 #000;
+        transform: translateY(-50%);
+      }
+
+      .chapter-nav::before {
+        content: "页面目录 · 阅读进度";
+        position: relative;
+        z-index: 2;
+        padding: 7px 10px 12px;
+        color: #000;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .08em;
+      }
+
+      .chapter-progress-rail {
+        position: absolute;
+        z-index: 0;
+        top: 57px;
+        bottom: 29px;
+        left: 30px;
+        width: 3px;
+        overflow: hidden;
+        background: #d8d8d2;
+      }
+
+      .chapter-progress-rail i {
+        display: block;
+        width: 100%;
+        height: var(--page-progress);
+        background: var(--lime-deep);
+        transition: height 180ms linear;
+      }
+
+      .chapter-nav a {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 18px 1fr;
+        align-items: center;
+        min-height: 39px;
+        padding: 8px 10px;
+        border: 0;
+        border-radius: 4px;
+        color: #666;
+        background: transparent;
+        box-shadow: none;
+        font-size: 12px;
+        text-decoration: none;
+        transform: none;
+      }
+
+      .chapter-nav a span {
+        display: grid;
+        place-items: center;
+        width: 14px;
+        height: 14px;
+        color: #000;
+        background: #fff;
+        font-size: 10px;
+        line-height: 1;
+      }
+
+      .chapter-nav a:hover {
+        color: #000;
+        background: var(--lime-soft);
+      }
+
+      .chapter-nav a.active {
+        color: #000;
+        font-weight: 900;
+        background: var(--lime);
+        box-shadow: 2px 2px 0 #000;
+        transform: translate(-1px, -1px);
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .chapter-nav {
+        display: none;
+      }
+
+      .topbar {
+        display: flex;
+      }
+
+      main {
+        width: min(900px, calc(100% - 24px));
+        margin: 0 auto;
+      }
+    }
+
+    .swatch-panel {
+      padding: 18px;
+    }
+
+    .swatch-panel h3 {
+      margin: 0 0 16px;
+      line-height: 1.4;
+    }
+
+    .swatch-panel .swatches {
+      gap: 10px;
+      margin-top: 0;
+    }
+
+    .swatch-panel .swatch {
+      min-height: 80px;
+      padding: 12px;
+    }
+
+    @media (max-width: 620px) {
+      .hero-issue {
+        align-content: center;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 3px 12px;
+        padding-block: 8px;
+        font-size: 9px;
+      }
+
+      .hero-issue span {
+        white-space: nowrap;
+      }
+
+      .hero-eyeline {
+        width: auto;
+        max-width: 100%;
+        font-size: 9px;
+        letter-spacing: .07em;
+        overflow-wrap: anywhere;
+        white-space: normal;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .single-pose-preview { animation: none; }
+      .four-frame-player img { animation: none; opacity: 0; }
+      .four-frame-player img:first-child { opacity: 1; }
+      .preview-runner-cycle { animation: none; left: 50%; }
+      .preview-runner-cycle img { animation: none; opacity: 0; }
+      .preview-runner-cycle img:first-child { opacity: 1; }
+    }
+
+    /* Five-step confirmation contract: one visible user decision per step. */
+    .confirmation-contract {
+      width: min(100%, 1040px);
+      margin: 0 auto;
+      padding: 72px 30px 34px;
+      background: #fff;
+    }
+
+    .confirmation-contract-head > span {
+      color: var(--lime-deep);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .14em;
+    }
+
+    .confirmation-contract-head h2 {
+      max-width: 700px;
+      margin: 12px 0 10px;
+      font-family: "Source Han Sans CN", "思源黑体 CN", "Source Han Sans SC", "Noto Sans CJK SC", "PingFang SC", sans-serif;
+      font-size: clamp(34px, 6vw, 52px);
+      line-height: 1.12;
+      letter-spacing: -.035em;
+    }
+
+    .confirmation-contract-head h2 em {
+      padding-inline: 4px;
+      background: var(--lime);
+      font-style: normal;
+    }
+
+    .confirmation-contract-head p {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .confirmation-contract-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .confirmation-contract-list article {
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      min-height: 78px;
+      padding: 12px 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .confirmation-contract-list article > b {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      aspect-ratio: 1;
+      border-radius: 13px;
+      background: var(--lime);
+      color: #000;
+      font-size: 13px;
+    }
+
+    .confirmation-contract-list article div {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .confirmation-contract-list strong {
+      font-size: 13px;
+    }
+
+    .confirmation-contract-list article div span,
+    .confirmation-contract-list small {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .confirmation-contract-list small {
+      max-width: 190px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--surface);
+      text-align: center;
+    }
+
+    .confirmation-contract-note {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border: 1px dashed var(--lime-deep);
+      border-radius: 15px;
+      background: var(--lime-soft);
+      color: #526020;
+      font-size: 11px;
+      line-height: 1.65;
+    }
+
+    @media (max-width: 620px) {
+      .confirmation-contract {
+        padding: 58px 16px 20px;
+      }
+
+      .confirmation-contract-list article {
+        grid-template-columns: 44px minmax(0, 1fr);
+        align-items: start;
+      }
+
+      .confirmation-contract-list small {
+        grid-column: 2;
+        max-width: none;
+        justify-self: start;
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">图</span>
+      <span>Progress Bar Studio<small>图图的 AI 进度条 Skill</small></span>
+    </div>
+    <div class="top-progress" aria-label="五步进度">
+      <div class="top-progress-track"><div class="top-progress-fill" id="topProgressFill"></div></div>
+      <div class="top-progress-labels" id="topProgressLabels">
+        <span class="active">上传</span><span>角色</span><span>章节</span><span>样式</span><span>导出</span>
+      </div>
+    </div>
+    <span class="status-pill">比赛版交互原型</span>
+  </header>
+
+  <aside class="chapter-nav" aria-label="页面目录">
+    <div class="chapter-progress-rail" aria-hidden="true"><i></i></div>
+    <a href="#top" class="active" data-nav="hero"><span>●</span>首页</a>
+    <a href="#workflow-title" data-nav="workflow"><span>○</span>工作流与确认</a>
+    <a href="#step-1" data-nav="0"><span>○</span>上传素材</a>
+    <a href="#step-2" data-nav="1"><span>○</span>角色生成</a>
+    <a href="#step-3" data-nav="2"><span>○</span>自动章节</a>
+    <a href="#step-4" data-nav="3"><span>○</span>样式定制</a>
+    <a href="#step-5" data-nav="4"><span>○</span>预览导出</a>
+    <a href="#complete" data-nav="complete"><span>○</span>完成</a>
+  </aside>
+
+  <main>
+    <section class="hero hero-magazine" id="top" data-nav-section="hero">
+      <div class="hero-magazine-shell">
+        <div class="hero-kicker">AI无限开发者创作大赛</div>
+        <div class="hero-issue">
+          <span>图图的 AI 进度条 Skill</span>
+          <span>2026 · NO.01</span>
+        </div>
+
+        <aside class="hero-side">
+          <div class="hero-side-main">
+            <span class="hero-side-label">VIDEO TOOL</span>
+            <b>五步<br />做完</b>
+            <p>章节识别、样式选择、透明导出</p>
+          </div>
+          <div class="hero-character-note">
+            <span>NEW</span>
+            <strong>卡通角色可选</strong>
+            <small>有 IP 就让它走起来；不上传角色，也能生成纯进度条。</small>
+          </div>
+        </aside>
+
+        <div class="hero-poster">
+          <span class="hero-ghost" aria-hidden="true">PROGRESS</span>
+          <p class="hero-eyeline">UPLOAD ONCE · GET A READY-TO-EDIT PROGRESS BAR</p>
+          <h1>上传视频，<br />生成<span>专属进度条</span></h1>
+          <p class="hero-lede">
+            AI 先听懂视频并拆出真实章节，再选择四种预设或上传喜欢的进度条参考图定制。卡通形象可以不使用，也可以生成单张轻动或四帧逐帧行走版。
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#step-1">开始五步制作 ↓</a>
+            <button class="button" id="jumpStyles">查看样式定制</button>
+          </div>
+          <figure class="hero-proof">
+            <img src="./assets/01-hook-hug-pure-white.png" alt="图图和小怪一起制作视频进度条" />
+            <figcaption>纯白工作台 · 颜色与角色均可自定义</figcaption>
+          </figure>
+        </div>
+
+        <div class="hero-foot-note">少搭关键帧 · 少反复卡时间 · 透明素材直接交付</div>
+        <nav class="hero-agenda" aria-label="五步工作流">
+          <a href="#step-1"><b>01</b><span>上传素材</span></a>
+          <a href="#step-2"><b>02</b><span>角色可选</span></a>
+          <a href="#step-3"><b>03</b><span>自动章节</span></a>
+          <a href="#step-4"><b>04</b><span>样式定制</span></a>
+          <a href="#step-5"><b>05</b><span>透明导出</span></a>
+        </nav>
+      </div>
+    </section>
+
+    <section class="workflow-contrast" data-nav-section="workflow" aria-labelledby="workflow-title">
+      <div class="workflow-intro">
+        <small>过去的工作流 VS 现在的工作流</small>
+        <h2 id="workflow-title">过去要搭关键帧，<br />现在只需要<em>上传视频</em></h2>
+        <p>同一条章节进度条，手工制作要反复卡时间、调动画；现在由网页完成选择与确认，由 Codex Skill 负责高质量透明成片。</p>
+      </div>
+      <div class="workflow-grid">
+        <article class="workflow-card old">
+          <span class="workflow-tag">过去 · 手工制作</span>
+          <h3>一条进度条，要拆成很多零碎操作</h3>
+          <ul>
+            <li>听完整条视频，手动划分章节</li>
+            <li>逐个计算时间点，搭建关键帧</li>
+            <li>抠角色、做动画、反复调整位置</li>
+            <li>视频一删改，时间轴和动画重新校准</li>
+          </ul>
+        </article>
+        <article class="workflow-card now">
+          <span class="workflow-tag">现在 · 网页＋Skill 协作</span>
+          <h3>上传一次，在一个工作台里完成</h3>
+          <ul>
+            <li>本地提取音频，AI 识别语义转折与时间点</li>
+            <li>角色可跳过，也可定制单张或四帧行走版</li>
+            <li>四种预设可直接选，也能上传参考图定制</li>
+            <li>透明素材网页导出，4K 母版交给 Codex</li>
+          </ul>
+        </article>
+      </div>
+      <div class="workflow-result">从“手动搭关键帧”变成“上传 → 五步确认 → 透明导出”</div>
+    </section>
+
+    <section class="confirmation-contract" aria-labelledby="confirmation-title">
+      <div class="confirmation-contract-head">
+        <span>HUMAN-IN-THE-LOOP</span>
+        <h2 id="confirmation-title">每一步先给你看，<br /><em>确认后才继续</em></h2>
+        <p>Skill 不会一路埋头跑到成片。每一步都交付一个可检查结果，只问一个关键确认；需要修改时只回退受影响的步骤。</p>
+      </div>
+      <div class="confirmation-contract-list">
+        <article><b>01</b><div><strong>素材简报</strong><span>确认文件、视频参数、目标编辑器与输出规格</span></div><small>未确认：不转写、不生成</small></article>
+        <article><b>02</b><div><strong>角色模式与身份</strong><span>确认无角色 / 单张 / 四帧，以及同一 IP 与脚底线</span></div><small>不满意：只重做角色</small></article>
+        <article><b>03</b><div><strong>章节时间线</strong><span>确认时间点、章节名与每个语义转折依据</span></div><small>修改后：撤销样式与导出确认</small></article>
+        <article><b>04</b><div><strong>样式与视觉适配</strong><span>确认预设 / 参考图、配色、行走平面与画面避让</span></div><small>修改后：只撤销导出确认</small></article>
+        <article><b>05</b><div><strong>交付与完整渲染</strong><span>确认文件清单、尺寸、编码、空间与是否先测 15 秒</span></div><small>授权后：才开始完整编码</small></article>
+      </div>
+      <div class="confirmation-contract-note">每次确认都会写入 decision-log.json；用户已经明确说过的选择会被记录，不重复追问。</div>
+    </section>
+
+    <section class="step" id="step-1" data-step="0">
+      <div class="step-header">
+        <div>
+          <div class="step-index"><b>01</b>UPLOAD & PROBE</div>
+          <h2>上传素材，<br /><em>自动读取视频</em></h2>
+        </div>
+        <p class="step-description">
+          用户只需要提供视频，再决定是否加入自己的卡通角色；颜色参考同样可选。系统自动识别画幅、时长、帧率与音频。
+        </p>
+      </div>
+
+      <div class="workbench">
+        <div class="workbench-bar">
+          <i></i><i></i><i></i>
+          <span class="workbench-title">步骤 01 · 素材输入</span>
+          <span class="workbench-state" id="uploadState">等待素材</span>
+        </div>
+        <div class="workbench-body">
+          <div class="character-mode" role="group" aria-label="是否使用卡通形象">
+            <div>
+              <small>CHARACTER MODE</small>
+              <strong>这条进度条要不要卡通形象？</strong>
+              <span>角色属于可选增强项，不影响章节分析、样式选择和透明导出。</span>
+            </div>
+            <div class="character-mode-options">
+              <button class="character-mode-option active" type="button" data-character-mode="with" aria-pressed="true">
+                使用卡通形象
+              </button>
+              <button class="character-mode-option" type="button" data-character-mode="without" aria-pressed="false">
+                不使用角色
+              </button>
+            </div>
+          </div>
+
+          <div class="upload-grid">
+            <button class="upload-card" data-upload="video">
+              <span class="upload-icon">▶</span>
+              <strong>上传成片视频</strong>
+              <span>MP4 / MOV<br />自动读取真实时间轴</span>
+            </button>
+            <button class="upload-card character-upload" data-upload="character">
+              <span class="upload-icon">☺</span>
+              <strong>上传自己的角色（可选）</strong>
+              <span>JPG / PNG / HEIC / 截图<br />无需提前抠图</span>
+            </button>
+            <button class="upload-card" data-upload="palette">
+              <span class="upload-icon">◉</span>
+              <strong>颜色参考（可选）</strong>
+              <span>色卡 / 截图 / HEX<br />支持自动取色</span>
+            </button>
+          </div>
+
+          <div class="probe-panel">
+            <div class="probe-item"><small>SOURCE</small><b id="probeName">7月29日(5).mp4</b></div>
+            <div class="probe-item"><small>画幅</small><b>1080 × 1920</b></div>
+            <div class="probe-item"><small>时长</small><b>02:08.4</b></div>
+            <div class="probe-item"><small>帧率</small><b>30 fps</b></div>
+            <div class="probe-item"><small>音频</small><b>AAC ✓</b></div>
+          </div>
+
+          <div class="system-note">
+            <b>AI 自动处理：</b>
+            <span>保留源视频原始时长和帧率；角色位置由 S1–S4 样式规则固定，不额外向用户提问。</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="step" id="step-2" data-step="1">
+      <div class="step-header">
+        <div>
+          <div class="step-index"><b>02</b>CHARACTER PREP</div>
+          <h2>上传自己的 IP，<br />定制<em>专属行走版本</em></h2>
+        </div>
+        <p class="step-description">
+          AI 读取角色最有辨识度的颜色、花纹、服装、配饰与线稿关系。用户只在“单张轻动”和“四帧逐帧”之间选择，不需要再决定帧数。
+        </p>
+      </div>
+
+      <div class="workbench">
+        <div class="workbench-bar">
+          <i></i><i></i><i></i>
+          <span class="workbench-title">步骤 02 · 根据 IP 定制行走版本</span>
+          <span class="workbench-state" id="characterState">等待确认</span>
+        </div>
+        <div class="workbench-body">
+          <div class="character-skip-panel" id="characterSkipPanel" hidden>
+            <span>PURE PROGRESS BAR</span>
+            <h3>已跳过角色生成</h3>
+            <p>AI 将直接进入章节识别，继续选择四种预设或上传参考图定制，再生成配色和透明素材；进度条内部不会出现人物或卡通 IP。</p>
+            <button class="button" type="button" id="restoreCharacter">改用卡通形象</button>
+          </div>
+
+          <div class="character-production">
+          <div class="motion-mode" role="group" aria-label="角色行走形式">
+            <div>
+              <small>MOTION OUTPUT</small>
+              <strong>选择角色怎么走</strong>
+              <span>单张更省成本；四帧步态更真实。两种模式都会保留原 IP 的辨识特征。</span>
+            </div>
+            <div class="motion-mode-options">
+              <button class="motion-mode-option" type="button" data-motion-mode="single" aria-pressed="false">
+                <b>单张轻动</b><small>1 张透明 PNG</small>
+              </button>
+              <button class="motion-mode-option active" type="button" data-motion-mode="four" aria-pressed="true">
+                <b>四帧逐帧</b><small>4 张透明 PNG</small>
+              </button>
+            </div>
+          </div>
+
+          <div class="compare-grid">
+            <article class="compare-card">
+              <header>用户上传原图 <span>保持原文件不变</span></header>
+              <div class="compare-media">
+                <img src="./assets/character-original.png" alt="用户上传的小怪原始角色图" />
+              </div>
+            </article>
+            <article class="compare-card">
+              <header>按原 IP 定制的行走版本 <span id="generatedModeLabel">4 帧循环 · 6 FPS</span></header>
+              <div class="compare-media generated-preview">
+                <img class="single-pose-preview" src="./assets/xiaoguai-running.png" alt="AI 生成的小怪单张轻动透明 PNG" />
+                <div class="four-frame-player" aria-label="小怪四帧逐帧行走循环预览">
+                  <img src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-01.png" alt="四帧步态第 1 帧：绿色脚掌向前接触" />
+                  <img src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-02.png" alt="四帧步态第 2 帧：双脚在身体下方通过" />
+                  <img src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-03.png" alt="四帧步态第 3 帧：白色脚掌向前接触" />
+                  <img src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-04.png" alt="四帧步态第 4 帧：收腿抬升通过" />
+                  <span class="playback-badge">▶ 4 FRAMES · 6 FPS</span>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div class="ip-custom-flow">
+            <div class="ip-custom-copy">
+              <small>CUSTOM WALKING IP</small>
+              <h3>角色没换，只是开始走路了</h3>
+              <p>AI 以用户上传的角色为唯一身份参考。四帧版先生成一张横向四格步态图，再在本地拆帧、对齐脚底线并输出透明序列，节省生成次数。</p>
+            </div>
+            <div class="ip-custom-steps" aria-label="IP 行走版本生成过程">
+              <span><b>01</b>读取辨识特征</span>
+              <i>→</i>
+              <span><b>02</b>生成四格步态图</span>
+              <i>→</i>
+              <span><b>03</b>本地拆帧与对齐</span>
+            </div>
+          </div>
+
+          <div class="walk-cycle" id="walkCycle" aria-label="四帧逐帧行走预览">
+            <header><b>四帧真实走路循环</b><span>CONTACT → DOWN → PASSING → UP</span></header>
+            <div class="walk-frames">
+              <figure><img src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-01.png" alt="绿色脚掌向前的接触姿势" /><figcaption>01 左接触</figcaption></figure>
+              <figure><img src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-02.png" alt="双脚通过时身体下沉的姿势" /><figcaption>02 下沉</figcaption></figure>
+              <figure><img src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-03.png" alt="白色脚掌向前的反向接触姿势" /><figcaption>03 右接触</figcaption></figure>
+              <figure><img src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-04.png" alt="双脚收在身体下方的抬升姿势" /><figcaption>04 抬升</figcaption></figure>
+            </div>
+            <p>四张透明 PNG 已按同一画布、同一脚底线对齐，以 1 → 2 → 3 → 4、6 FPS 循环播放；接触帧交换前脚，过渡帧负责收腿与轻微起伏。</p>
+          </div>
+
+          <div class="character-actions">
+            <button class="button" id="regenerateCharacter">重新生成</button>
+            <button class="button primary" id="approveCharacter">满意，继续</button>
+          </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="step" id="step-3" data-step="2">
+      <div class="step-header">
+        <div>
+          <div class="step-index"><b>03</b>TRANSCRIBE & CHAPTERS</div>
+          <h2>听懂视频，<br /><em>自动拆出真实章节</em></h2>
+        </div>
+        <p class="step-description">
+          比赛版会先在本地提取音频并生成带时间戳的逐字稿，再用轻量模型寻找语义转折。默认输出 4–7 个章节，每个名称 2–6 个汉字。
+        </p>
+      </div>
+
+      <div class="workbench">
+        <div class="workbench-bar">
+          <i></i><i></i><i></i>
+          <span class="workbench-title">步骤 03 · 章节分析</span>
+          <span class="workbench-state">待确认：章节时间线</span>
+        </div>
+        <div class="workbench-body">
+          <div class="chapter-summary">
+            <div class="summary-chip"><small>识别语言</small><b>中文普通话</b></div>
+            <div class="summary-chip"><small>建议章节</small><b>5 个</b></div>
+            <div class="summary-chip"><small>最短章节</small><b>20.4 秒</b></div>
+            <div class="summary-chip"><small>划分方式</small><b>语义转折</b></div>
+          </div>
+
+          <div class="chapter-table-wrap">
+            <table aria-label="可编辑章节时间表">
+              <thead>
+                <tr><th>章节</th><th>开始时间</th><th>名称（2–6字）</th><th>语义依据</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>01</td><td contenteditable="true">00:00.0</td><td contenteditable="true">为什么做</td><td contenteditable="true">开场提出手动进度条的麻烦</td></tr>
+                <tr><td>02</td><td contenteditable="true">00:20.4</td><td contenteditable="true">上传素材</td><td contenteditable="true">开始讲视频与角色输入</td></tr>
+                <tr><td>03</td><td contenteditable="true">00:49.9</td><td contenteditable="true">角色行走</td><td contenteditable="true">普通 IP 转透明行走角色</td></tr>
+                <tr><td>04</td><td contenteditable="true">01:16.8</td><td contenteditable="true">样式定制</td><td contenteditable="true">展示预设、参考图和配色</td></tr>
+                <tr><td>05</td><td contenteditable="true">01:47.6</td><td contenteditable="true">透明导出</td><td contenteditable="true">解释剪映与 4K Alpha 交付</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="timeline-map" aria-hidden="true">
+            <span class="timeline-segment">为什么做</span>
+            <span class="timeline-segment">上传素材</span>
+            <span class="timeline-segment">角色行走</span>
+            <span class="timeline-segment">样式定制</span>
+            <span class="timeline-segment">透明导出</span>
+          </div>
+
+          <div class="system-note">
+            <b>比赛版目标：</b>
+            <span>章节切换跟随实际内容转折，过短片段自动合并。当前静态页面用于展示和编辑，真实语音分析将在服务接入后启用。</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="step" id="step-4" data-step="3">
+      <div class="step-header">
+        <div>
+          <div class="step-index"><b>04</b>STYLE & COLOR</div>
+          <h2>四种预设，<br />也能上传参考图<em>定制</em></h2>
+        </div>
+        <p class="step-description">
+          直接选择 S1–S4，或上传喜欢的进度条截图。AI 自动拆解轨道、节点、标签、行走平面与配色，再适配本视频。
+        </p>
+      </div>
+
+      <div class="workbench">
+        <div class="workbench-bar">
+          <i></i><i></i><i></i>
+          <span class="workbench-title">步骤 04 · 四种预设＋自定义参考</span>
+          <span class="workbench-state" id="styleState">待确认：S1 胶囊章节</span>
+        </div>
+        <div class="workbench-body">
+          <div class="style-grid" id="styleGrid">
+            <article class="style-card s1 selected" data-style="S1 胶囊章节">
+              <header><span class="style-code">S1</span><h3>胶囊章节</h3><span class="placement">走在线上</span></header>
+              <div class="style-demo">
+                <img class="style-runner" src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-01.png" alt="" />
+                <div class="demo-line"></div>
+                <div class="capsules"><span>开场</span><span>信息</span><span class="active">演示</span><span>总结</span></div>
+              </div>
+              <footer>章节最清晰，适合知识讲解与个人品牌视频。</footer>
+            </article>
+
+            <article class="style-card s2" data-style="S2 分段跑道">
+              <header><span class="style-code">S2</span><h3>分段跑道</h3><span class="placement">走在线上</span></header>
+              <div class="style-demo">
+                <img class="style-runner" src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-01.png" alt="" />
+                <div class="segments"><i class="active"></i><i class="active"></i><i class="active"></i><i></i><i></i></div>
+                <div class="segment-labels"><span>Part 1</span><span>Part 2</span><span>Part 3</span><span>Part 4</span><span>Part 5</span></div>
+              </div>
+              <footer>节奏轻快，适合游戏感、像素风与可爱角色。</footer>
+            </article>
+
+            <article class="style-card s3" data-style="S3 文字推进">
+              <header><span class="style-code">S3</span><h3>文字推进</h3><span class="placement">文字上方</span></header>
+              <div class="style-demo">
+                <img class="style-runner" src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-01.png" alt="" />
+                <div class="demo-line"></div>
+                <div class="text-chapters"><span>开场</span><span>信息</span><span class="active">演示</span><span>总结</span></div>
+              </div>
+              <footer>占用空间最少，适合极简口播与画面信息较多的视频。</footer>
+            </article>
+
+            <article class="style-card s4" data-style="S4 标签分栏带">
+              <header><span class="style-code">S4</span><h3>标签分栏带</h3><span class="placement">当前格内</span></header>
+              <div class="style-demo">
+                <img class="style-runner" src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-01.png" alt="" />
+                <div class="band-chapters"><span>口播</span><span>信息</span><span class="active">演示</span><span>总结</span></div>
+              </div>
+              <footer>小屏依然易读，角色在当前章节内保留安全区。</footer>
+            </article>
+          </div>
+
+          <div class="reference-style-lab" id="referenceStyleLab">
+            <div class="reference-style-copy">
+              <span class="reference-kicker">CUSTOM REFERENCE</span>
+              <h3><span class="reference-title-line">上传你喜欢的进度条，</span><br />AI 帮你重建成<em>专属版本</em></h3>
+              <p>保留它的结构语言，不照搬原图：自动识别轨道、节点、标签层级、进度填充、角色行走平面和配色，再换成你的章节与当前 IP。</p>
+              <div class="reference-flow" aria-label="自定义样式处理流程">
+                <span>上传参考图</span><i>→</i><span>AI 拆结构</span><i>→</i><span>适配章节与 IP</span><i>→</i><span>静态确认</span>
+              </div>
+              <label class="reference-upload-button" for="referenceStyleInput">
+                选择 PNG / JPG / WebP
+                <input id="referenceStyleInput" type="file" accept="image/png,image/jpeg,image/webp" />
+              </label>
+            </div>
+            <div class="reference-preview" id="referencePreview">
+              <div class="reference-empty" id="referenceEmpty">
+                <b>＋</b>
+                <span>参考图保持原比例预览</span>
+                <small>不会直接放大截图冒充高清成品</small>
+              </div>
+              <img id="referencePreviewImage" alt="" hidden />
+              <div class="reference-file-name" id="referenceFileName">等待上传参考图</div>
+            </div>
+          </div>
+
+          <div class="color-lab">
+            <div class="color-controls">
+              <h3>主色设置</h3>
+              <div class="color-input-row">
+                <input type="color" id="colorPicker" value="#c7e97a" aria-label="选择主色" />
+                <input class="hex-input" id="hexInput" value="#C7E97A" maxlength="7" aria-label="输入十六进制颜色" />
+              </div>
+              <div class="reference-color">
+                <span>▧</span><span><b>也可上传色卡或参考图</b><br />AI 自动提取主色并生成色阶</span>
+              </div>
+              <button class="button small" id="extractColor">模拟从参考图取色</button>
+            </div>
+            <div class="swatch-panel">
+              <h3>自动派生的完整色盘</h3>
+              <div class="swatches">
+                <div class="swatch" id="swatchActive"><b>主色</b><small id="activeHex">#C7E97A</small></div>
+                <div class="swatch" id="swatchSurface"><b>浅色底</b><small id="surfaceHex">#F1FBD0</small></div>
+                <div class="swatch" id="swatchDeep"><b>深色</b><small id="deepHex">#65A30D</small></div>
+                <div class="swatch" id="swatchText"><b>文字</b><small>#000000</small></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="step" id="step-5" data-step="4">
+      <div class="step-header">
+        <div>
+          <div class="step-index"><b>05</b>PREVIEW & EXPORT</div>
+          <h2>先看最终效果，<br /><em>再导出透明素材</em></h2>
+        </div>
+        <p class="step-description">
+          先把进度条叠在真实视频上检查字幕、人物和重点画面。网页负责透明 PNG 帧、透明动画 WebP 与工程配置，Codex 负责 4K ProRes 4444 Alpha 母版。
+        </p>
+      </div>
+
+      <div class="workbench">
+        <div class="workbench-bar">
+          <i></i><i></i><i></i>
+          <span class="workbench-title">步骤 05 · 预览与导出</span>
+          <span class="workbench-state">待授权：完整导出</span>
+        </div>
+        <div class="workbench-body">
+          <div class="preview-layout">
+            <div class="video-preview">
+              <img src="./assets/05-export-done-pure-white.png" alt="图图和小怪完成视频进度条制作" />
+              <div class="preview-overlay">
+                <div class="preview-track">
+                  <div class="preview-track-fill"></div>
+                  <div class="preview-runner-cycle" aria-label="小怪沿着进度线自然行走">
+                    <img src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-01.png" alt="" />
+                    <img src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-02.png" alt="" />
+                    <img src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-03.png" alt="" />
+                    <img src="./assets/xiaoguai-walk-cycle-v2/xiaoguai-walk-v2-frame-04.png" alt="" />
+                  </div>
+                </div>
+                <div class="preview-capsules">
+                  <span>为什么做</span><span>上传素材</span><span>角色行走</span><span>样式定制</span><span>透明导出</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="export-panel">
+              <article class="export-card">
+                <header><span class="file-icon">PNG</span><h3>透明逐帧素材</h3><span class="export-tag">网页</span></header>
+                <p>单张或四张 RGBA PNG，角色脚底线统一，可直接放入剪映制作逐帧动画。</p>
+              </article>
+              <article class="export-card">
+                <header><span class="file-icon">W</span><h3>透明 WebP ＋ 工程配置</h3><span class="export-tag">网页</span></header>
+                <p>交付透明循环动画、章节时间 JSON 与 Codex 制作简报，方便继续修改。</p>
+              </article>
+              <article class="export-card featured">
+                <header><span class="file-icon">4K</span><h3>交给 Codex 完成透明母版</h3><span class="export-tag">推荐</span></header>
+                <p>3840 宽透明条带，源帧率与源时长，ProRes 4444、无音频，适合剪映 / Premiere / Final Cut。</p>
+              </article>
+              <div class="system-note" style="margin-top: 0;">
+                <b>透明并非黑底：</b>
+                <span>必须验证 Alpha 通道；正式全量编码前，先把 15 秒跨章节小样导入真实编辑器测试。</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="approval-gates" aria-label="五步用户确认节点">
+            <div class="gate"><b>1</b><span>素材简报</span></div>
+            <div class="gate"><b>2</b><span>角色身份</span></div>
+            <div class="gate"><b>3</b><span>章节时间</span></div>
+            <div class="gate"><b>4</b><span>视觉适配</span></div>
+            <div class="gate"><b>5</b><span>完整导出</span></div>
+          </div>
+
+          <div class="system-note">
+            <b>完整版质检：</b>
+            <span>检查四帧姿势差异、脚底线、Alpha 通道、章节切换和编码信息；正式全量输出前，先在真实编辑器验证短样。</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="completion" id="complete" data-nav-section="complete">
+      <span class="completion-shape completion-shape-a" aria-hidden="true"></span>
+      <span class="completion-shape completion-shape-b" aria-hidden="true"></span>
+      <div class="completion-inner">
+        <div class="completion-topline">
+          <span>OUTPUT READY</span>
+          <span>05 / 05</span>
+        </div>
+        <div class="completion-grid">
+          <div class="completion-statement">
+            <span class="completion-ghost" aria-hidden="true">DONE</span>
+            <p class="completion-kicker">PROGRESS BAR STUDIO</p>
+            <h2>把时间留给内容，<br /><em>把进度条交给 AI</em></h2>
+            <p class="completion-copy">
+              上传视频，选择是否加入角色及单张/四帧模式，再确认章节、四种预设或自定义参考样式与配色。网页交付工程配置，Codex 重建并交付 4K 透明母版。
+            </p>
+            <a class="button primary completion-cta" href="#step-1">再做一条进度条 ↑</a>
+          </div>
+          <div class="completion-deliverables">
+            <figure class="completion-proof">
+              <img src="./assets/04-ip-running-one-lele-pure-white.png" alt="图图和小怪一起向前跑" />
+              <figcaption>角色可选 · 有 IP / 无角色都能完成</figcaption>
+            </figure>
+            <div class="completion-list">
+              <div><b>01</b><span>真实章节</span><small>语义转折＋时间点</small></div>
+              <div><b>02</b><span>角色可选</span><small>单张轻动 / 四帧逐帧</small></div>
+              <div><b>03</b><span>样式可定制</span><small>四种预设 / 上传参考图</small></div>
+              <div><b>04</b><span>透明交付</span><small>网页配置＋Codex 4K</small></div>
+            </div>
+          </div>
+        </div>
+        <div class="completion-ribbon">
+          <span>上传视频</span><i>→</i><span>AI 语义拆章</span><i>→</i><span>预设 / 参考图</span><i>→</i><span>透明交付</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast">已更新</div>
+
+  <script>
+    const root = document.documentElement;
+    const steps = [...document.querySelectorAll(".step")];
+    const chapterLinks = [...document.querySelectorAll(".chapter-nav a")];
+    const chapterTargets = chapterLinks.map((link) => ({
+      key: link.dataset.nav,
+      target: document.querySelector(link.getAttribute("href"))
+    })).filter((item) => item.target);
+    const progressFill = document.getElementById("topProgressFill");
+    const chapterNav = document.querySelector(".chapter-nav");
+    const progressLabels = [...document.querySelectorAll("#topProgressLabels span")];
+    const toast = document.getElementById("toast");
+    let activeStep = 0;
+    let toastTimer = null;
+
+    function setChapterNav(key) {
+      chapterLinks.forEach((link) => {
+        const isActive = link.dataset.nav === String(key);
+        link.classList.toggle("active", isActive);
+        const dot = link.querySelector("span");
+        if (dot) dot.textContent = isActive ? "●" : "○";
+      });
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 1600);
+    }
+
+    function updateTopProgress() {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const ratio = maxScroll > 0 ? window.scrollY / maxScroll : 0;
+      progressFill.style.width = `${Math.min(100, Math.max(0, ratio * 100))}%`;
+      chapterNav.style.setProperty("--page-progress", `${Math.min(100, Math.max(0, ratio * 100))}%`);
+
+      let currentChapter = chapterTargets[0]?.key || "hero";
+      const readingLine = window.innerHeight * 0.32;
+      chapterTargets.forEach(({ key, target }) => {
+        if (target.getBoundingClientRect().top <= readingLine) currentChapter = key;
+      });
+      setChapterNav(currentChapter);
+
+      if (steps[0] && window.scrollY < steps[0].offsetTop - 180) {
+        activeStep = 0;
+        progressLabels.forEach((label, index) => label.classList.toggle("active", index === 0));
+      }
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        activeStep = Number(entry.target.dataset.step);
+        progressLabels.forEach((label, index) => label.classList.toggle("active", index === activeStep));
+      });
+    }, { threshold: 0.42 });
+
+    steps.forEach((step) => observer.observe(step));
+
+    window.addEventListener("scroll", updateTopProgress, { passive: true });
+    updateTopProgress();
+
+    document.getElementById("jumpStyles").addEventListener("click", () => {
+      document.getElementById("step-4").scrollIntoView({ behavior: "smooth" });
+    });
+
+    const characterModeOptions = [...document.querySelectorAll("[data-character-mode]")];
+    const characterUpload = document.querySelector(".character-upload");
+    const characterProduction = document.querySelector(".character-production");
+    const characterSkipPanel = document.getElementById("characterSkipPanel");
+    const motionModeOptions = [...document.querySelectorAll("[data-motion-mode]")];
+    const walkCycle = document.getElementById("walkCycle");
+    const generatedModeLabel = document.getElementById("generatedModeLabel");
+    let motionMode = "four";
+
+    function setCharacterMode(mode, announce = true) {
+      const usesCharacter = mode === "with";
+      characterModeOptions.forEach((option) => {
+        const isActive = option.dataset.characterMode === mode;
+        option.classList.toggle("active", isActive);
+        option.setAttribute("aria-pressed", String(isActive));
+      });
+
+      characterUpload.disabled = !usesCharacter;
+      characterUpload.classList.toggle("is-disabled", !usesCharacter);
+      if (!usesCharacter) characterUpload.classList.remove("loaded");
+      document.body.classList.toggle("no-character-mode", !usesCharacter);
+      characterProduction.hidden = !usesCharacter;
+      characterSkipPanel.hidden = usesCharacter;
+      document.getElementById("characterState").textContent = usesCharacter
+        ? (motionMode === "four" ? "四帧逐帧 · 待确认" : "单张轻动 · 待确认")
+        : "已跳过角色";
+
+      const loaded = document.querySelectorAll(".upload-card.loaded:not(.is-disabled)").length;
+      document.getElementById("uploadState").textContent = loaded ? `已读取 ${loaded} 项素材` : "等待素材";
+      if (announce) {
+        showToast(usesCharacter ? "已启用卡通形象生成" : "已切换为纯进度条");
+      }
+    }
+
+    characterModeOptions.forEach((option) => {
+      option.addEventListener("click", () => setCharacterMode(option.dataset.characterMode));
+    });
+
+    document.getElementById("restoreCharacter").addEventListener("click", () => setCharacterMode("with"));
+    setCharacterMode("with", false);
+
+    function setMotionMode(mode, announce = true) {
+      motionMode = mode;
+      const isFour = mode === "four";
+      motionModeOptions.forEach((option) => {
+        const isActive = option.dataset.motionMode === mode;
+        option.classList.toggle("active", isActive);
+        option.setAttribute("aria-pressed", String(isActive));
+      });
+      walkCycle.hidden = !isFour;
+      document.body.classList.toggle("single-motion-mode", !isFour);
+      generatedModeLabel.textContent = isFour ? "4 帧循环 · 6 FPS" : "单张透明 PNG · 轻动";
+      document.getElementById("characterState").textContent = isFour ? "四帧逐帧 · 待确认" : "单张轻动 · 待确认";
+      if (announce) showToast(isFour ? "已选择四帧逐帧行走" : "已选择单张轻动");
+    }
+
+    motionModeOptions.forEach((option) => {
+      option.addEventListener("click", () => setMotionMode(option.dataset.motionMode));
+    });
+    setMotionMode("four", false);
+
+    document.querySelectorAll(".upload-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        if (card.disabled) return;
+        card.classList.toggle("loaded");
+        const loaded = document.querySelectorAll(".upload-card.loaded:not(.is-disabled)").length;
+        document.getElementById("uploadState").textContent = loaded ? `已读取 ${loaded} 项素材` : "等待素材";
+        showToast(card.classList.contains("loaded") ? "素材已加入演示工作台" : "已移除演示素材");
+      });
+    });
+
+    document.getElementById("approveCharacter").addEventListener("click", () => {
+      const label = motionMode === "four" ? "四帧逐帧" : "单张轻动";
+      document.getElementById("characterState").textContent = `${label}已确认 ✓`;
+      showToast(`${label}透明素材已确认`);
+      setTimeout(() => document.getElementById("step-3").scrollIntoView({ behavior: "smooth" }), 360);
+    });
+
+    document.getElementById("regenerateCharacter").addEventListener("click", () => {
+      document.getElementById("characterState").textContent = "正在重新生成…";
+      showToast(`已保留原图，重新生成${motionMode === "four" ? "四帧步态" : "单张姿势"}`);
+      setTimeout(() => {
+        document.getElementById("characterState").textContent = "新版本等待确认";
+      }, 1250);
+    });
+
+    document.querySelectorAll(".style-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        document.querySelectorAll(".style-card").forEach((item) => item.classList.remove("selected"));
+        card.classList.add("selected");
+        document.getElementById("referenceStyleLab").classList.remove("selected");
+        document.getElementById("styleState").textContent = `待确认：${card.dataset.style}`;
+        showToast(`已选择 ${card.dataset.style}`);
+      });
+    });
+
+    const referenceStyleInput = document.getElementById("referenceStyleInput");
+    const referenceStyleLab = document.getElementById("referenceStyleLab");
+    const referencePreviewImage = document.getElementById("referencePreviewImage");
+    const referenceEmpty = document.getElementById("referenceEmpty");
+    const referenceFileName = document.getElementById("referenceFileName");
+    let referenceObjectUrl = "";
+
+    function resetReferencePreview(message = "等待上传参考图") {
+      referencePreviewImage.hidden = true;
+      referencePreviewImage.removeAttribute("src");
+      referencePreviewImage.alt = "";
+      referenceEmpty.hidden = false;
+      referenceFileName.textContent = message;
+    }
+
+    resetReferencePreview();
+
+    referenceStyleInput.addEventListener("change", (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
+        event.target.value = "";
+        resetReferencePreview("格式不支持，请选择 PNG / JPG / WebP");
+        showToast("请选择 PNG、JPG 或 WebP 图片");
+        return;
+      }
+      if (referenceObjectUrl) URL.revokeObjectURL(referenceObjectUrl);
+      referenceObjectUrl = URL.createObjectURL(file);
+      referencePreviewImage.hidden = true;
+      referenceEmpty.hidden = false;
+      referenceFileName.textContent = `正在读取 · ${file.name}`;
+      referencePreviewImage.onload = () => {
+        referencePreviewImage.alt = `用户上传的进度条参考图：${file.name}`;
+        referencePreviewImage.hidden = false;
+        referenceEmpty.hidden = true;
+        referenceFileName.textContent = file.name;
+      };
+      referencePreviewImage.onerror = () => {
+        URL.revokeObjectURL(referenceObjectUrl);
+        referenceObjectUrl = "";
+        event.target.value = "";
+        resetReferencePreview("图片读取失败，请重新选择");
+        showToast("参考图读取失败，请重新选择");
+      };
+      referencePreviewImage.src = referenceObjectUrl;
+      referenceStyleLab.classList.add("selected");
+      document.querySelectorAll(".style-card").forEach((item) => item.classList.remove("selected"));
+      document.getElementById("styleState").textContent = `待确认：自定义参考 · ${file.name}`;
+      showToast("参考图已读取，将交给 AI 拆解并重建");
+    });
+
+    window.addEventListener("beforeunload", () => {
+      if (referenceObjectUrl) URL.revokeObjectURL(referenceObjectUrl);
+    });
+
+    function normalizeHex(value) {
+      const cleaned = value.trim().replace("#", "");
+      return /^[0-9a-fA-F]{6}$/.test(cleaned) ? `#${cleaned.toUpperCase()}` : null;
+    }
+
+    function mix(hex, target, amount) {
+      const n = parseInt(hex.slice(1), 16);
+      const t = parseInt(target.slice(1), 16);
+      const r = Math.round(((n >> 16) & 255) * (1 - amount) + ((t >> 16) & 255) * amount);
+      const g = Math.round(((n >> 8) & 255) * (1 - amount) + ((t >> 8) & 255) * amount);
+      const b = Math.round((n & 255) * (1 - amount) + (t & 255) * amount);
+      return `#${[r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("").toUpperCase()}`;
+    }
+
+    function applyColor(hex, announce = true) {
+      const isSystemLime = hex.toUpperCase() === "#C7E97A";
+      const soft = isSystemLime ? "#F1FBD0" : mix(hex, "#FFFFFF", 0.72);
+      const deep = isSystemLime ? "#65A30D" : mix(hex, "#20231D", 0.24);
+      const rgb = parseInt(hex.slice(1), 16);
+      const luminance = ((((rgb >> 16) & 255) * 299) + (((rgb >> 8) & 255) * 587) + ((rgb & 255) * 114)) / 1000;
+      const textColor = luminance > 150 ? "#000000" : "#FFFFFF";
+      root.style.setProperty("--accent", hex);
+      root.style.setProperty("--accent-soft", soft);
+      root.style.setProperty("--accent-deep", deep);
+      document.getElementById("colorPicker").value = hex.toLowerCase();
+      document.getElementById("hexInput").value = hex;
+      document.getElementById("activeHex").textContent = hex;
+      document.getElementById("surfaceHex").textContent = soft;
+      document.getElementById("deepHex").textContent = deep;
+      document.getElementById("swatchActive").style.background = hex;
+      document.getElementById("swatchActive").style.color = textColor;
+      document.getElementById("swatchSurface").style.background = soft;
+      document.getElementById("swatchDeep").style.background = deep;
+      document.getElementById("swatchDeep").style.color = "#FFFFFF";
+      document.getElementById("swatchText").style.background = textColor;
+      document.getElementById("swatchText").style.color = textColor === "#000000" ? "#FFFFFF" : "#000000";
+      if (announce) showToast(`主色已更新为 ${hex}`);
+    }
+
+    document.getElementById("colorPicker").addEventListener("input", (event) => {
+      applyColor(event.target.value.toUpperCase());
+    });
+
+    document.getElementById("hexInput").addEventListener("change", (event) => {
+      const hex = normalizeHex(event.target.value);
+      if (hex) applyColor(hex);
+      else {
+        event.target.value = getComputedStyle(root).getPropertyValue("--accent").trim().toUpperCase();
+        showToast("请输入 6 位 HEX 颜色");
+      }
+    });
+
+    document.getElementById("hexInput").addEventListener("input", (event) => {
+      const hex = normalizeHex(event.target.value);
+      if (hex) applyColor(hex);
+    });
+
+    document.getElementById("extractColor").addEventListener("click", () => applyColor("#C7E97A"));
+    applyColor("#C7E97A", false);
+
+    window.addEventListener("keydown", (event) => {
+      const tag = document.activeElement?.tagName;
+      if (tag === "INPUT" || document.activeElement?.isContentEditable) return;
+      if (event.key.toLowerCase() === "r") window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  </script>
+</body>
+</html>

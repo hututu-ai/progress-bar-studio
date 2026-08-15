@@ -1,0 +1,14 @@
+.DS_Store
+.env*
+*.pem
+__pycache__/
+/node_modules/
+/.vinext/
+/.wrangler/
+/dist/
+
+# Local task outputs and temporary media
+/outputs/
+/work/
+/.playwright-mcp/
+/custom-style-*.png

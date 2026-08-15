@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="730" viewBox="0 0 1200 730">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="5" dy="5" stdDeviation="0" flood-color="#000000" flood-opacity="1"/>
+    </filter>
+    <symbol id="character" viewBox="0 0 84 90">
+      <circle cx="42" cy="34" r="27" fill="#FFFFFF" stroke="#000000" stroke-width="3"/>
+      <circle cx="33" cy="31" r="3" fill="#000000"/><circle cx="51" cy="31" r="3" fill="#000000"/>
+      <path d="M35 44 Q42 50 49 44" fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+      <text x="42" y="82" text-anchor="middle" font-family="PingFang SC, sans-serif" font-size="14" fill="#666666">角色</text>
+    </symbol>
+  </defs>
+  <rect width="1200" height="730" fill="#F7F7F7"/>
+  <g font-family="PingFang SC, Noto Sans SC, sans-serif">
+    <text x="60" y="62" font-size="34" font-weight="700" fill="#000000">进度条样式库 · 4 种结构</text>
+    <text x="60" y="100" font-size="18" fill="#666666">上传角色或头像，并自定义主色、底色、字色、未完成色</text>
+    <g transform="translate(60 126)">
+      <rect width="1080" height="74" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="2" filter="url(#shadow)"/>
+      <text x="24" y="29" font-size="15" font-weight="700" fill="#000000">示例色卡 · 所有颜色均可替换</text>
+      <text x="24" y="54" font-size="13" fill="#666666">支持 HEX / 上传色卡 / 参考图取色</text>
+      <g transform="translate(360 19)" font-size="13" fill="#000000">
+        <circle cx="17" cy="17" r="17" fill="#C7E97A"/><text x="42" y="22">主色</text>
+        <circle cx="145" cy="17" r="17" fill="#FFFFFF" stroke="#D8D8D2"/><text x="170" y="22">底色</text>
+        <circle cx="273" cy="17" r="17" fill="#000000"/><text x="298" y="22">字色</text>
+        <circle cx="401" cy="17" r="17" fill="#F1FBD0"/><text x="426" y="22">未完成色</text>
+      </g>
+    </g>
+
+    <g transform="translate(60 230)">
+      <rect width="520" height="225" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="2" filter="url(#shadow)"/>
+      <text x="26" y="40" font-size="20" font-weight="700" fill="#000000">S1 · 胶囊章节</text>
+      <line x1="42" y1="86" x2="478" y2="86" stroke="#F1FBD0" stroke-width="8" stroke-linecap="round"/><line x1="42" y1="86" x2="280" y2="86" stroke="#C7E97A" stroke-width="8" stroke-linecap="round"/>
+      <use href="#character" x="246" y="6" width="70" height="75"/>
+      <g font-size="14" font-weight="600" text-anchor="middle"><rect x="28" y="131" width="105" height="45" rx="23" fill="#F1FBD0"/><text x="81" y="159" fill="#000000">开场</text><rect x="148" y="131" width="105" height="45" rx="23" fill="#F1FBD0"/><text x="201" y="159" fill="#000000">信息</text><rect x="268" y="131" width="105" height="45" rx="23" fill="#C7E97A"/><text x="321" y="159" fill="#000000">演示</text><rect x="388" y="131" width="105" height="45" rx="23" fill="#F1FBD0"/><text x="441" y="159" fill="#000000">总结</text></g>
+    </g>
+
+    <g transform="translate(620 230)">
+      <rect width="520" height="225" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="2" filter="url(#shadow)"/>
+      <text x="26" y="40" font-size="20" font-weight="700" fill="#000000">S2 · 分段跑道</text>
+      <g transform="translate(38 111)"><rect width="72" height="10" rx="5" fill="#C7E97A"/><rect x="88" width="72" height="10" rx="5" fill="#C7E97A"/><rect x="176" width="72" height="10" rx="5" fill="#C7E97A"/><rect x="264" width="72" height="10" rx="5" fill="#F1FBD0"/><rect x="352" width="72" height="10" rx="5" fill="#F1FBD0"/></g>
+      <use href="#character" x="222" y="25" width="76" height="81"/>
+      <g font-size="14" text-anchor="middle"><text x="73" y="156" fill="#65A30D">Part 1</text><text x="175" y="156" fill="#65A30D">Part 2</text><text x="277" y="156" fill="#C7E97A">Part 3</text><text x="379" y="156" fill="#666666">Part 4</text><text x="464" y="156" fill="#666666">Part 5</text></g>
+    </g>
+
+    <g transform="translate(60 480)">
+      <rect width="520" height="225" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="2" filter="url(#shadow)"/>
+      <text x="26" y="40" font-size="20" font-weight="700" fill="#000000">S3 · 文字推进</text>
+      <line x1="42" y1="111" x2="478" y2="111" stroke="#F1FBD0" stroke-width="4"/><line x1="42" y1="111" x2="295" y2="111" stroke="#C7E97A" stroke-width="4"/>
+      <use href="#character" x="260" y="25" width="74" height="79"/>
+      <g font-size="16" font-weight="600" text-anchor="middle"><text x="82" y="154" fill="#65A30D">开场</text><text x="180" y="154" fill="#65A30D">信息</text><text x="285" y="154" fill="#C7E97A">演示</text><text x="390" y="154" fill="#666666">总结</text></g>
+    </g>
+
+    <g transform="translate(620 480)">
+      <rect width="520" height="225" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="2" filter="url(#shadow)"/>
+      <text x="26" y="40" font-size="20" font-weight="700" fill="#000000">S4 · 标签分栏带</text>
+      <g transform="translate(36 86)"><rect width="448" height="72" rx="18" fill="#F1FBD0"/><rect width="268" height="72" rx="18" fill="#C7E97A"/><g font-size="15" font-weight="700" text-anchor="middle"><text x="56" y="43" fill="#000000">口播</text><text x="168" y="43" fill="#000000">信息</text><text x="392" y="43" fill="#666666">总结</text></g></g>
+      <use href="#character" x="276" y="89" width="60" height="64"/><text x="306" y="178" text-anchor="middle" font-size="12" font-weight="700" fill="#65A30D">演示</text>
+    </g>
+  </g>
+</svg>

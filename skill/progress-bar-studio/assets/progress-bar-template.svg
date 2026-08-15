@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="140" viewBox="0 0 480 140">
+  <defs>
+    <filter id="shadow" x="-20%" y="-30%" width="140%" height="170%">
+      <feDropShadow dx="4" dy="4" stdDeviation="0" flood-color="#000000" flood-opacity="1"/>
+    </filter>
+  </defs>
+  <rect x="10" y="8" width="460" height="120" rx="6"
+        fill="#FFFFFF" stroke="#000000" stroke-width="2" filter="url(#shadow)"/>
+  <line x1="30" y1="46" x2="450" y2="46"
+        stroke="#F1FBD0" stroke-width="7" stroke-linecap="round"/>
+  <line x1="30" y1="46" x2="190" y2="46"
+        stroke="#C7E97A" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="30" cy="46" r="6" fill="#C7E97A"/>
+  <circle cx="450" cy="46" r="5" fill="#F1FBD0"/>
+  <g font-family="PingFang SC, Hiragino Sans GB, sans-serif"
+     font-size="13" font-weight="600" text-anchor="middle">
+    <rect x="18" y="82" width="68" height="32" rx="16" fill="#F1FBD0"/>
+    <text x="52" y="103" fill="#000000">章节一</text>
+    <rect x="93" y="82" width="68" height="32" rx="16" fill="#C7E97A"/>
+    <text x="127" y="103" fill="#000000">章节二</text>
+    <rect x="168" y="82" width="68" height="32" rx="16" fill="#F1FBD0"/>
+    <text x="202" y="103" fill="#000000">章节三</text>
+    <rect x="243" y="82" width="68" height="32" rx="16" fill="#F1FBD0"/>
+    <text x="277" y="103" fill="#000000">章节四</text>
+    <rect x="318" y="82" width="68" height="32" rx="16" fill="#F1FBD0"/>
+    <text x="352" y="103" fill="#000000">章节五</text>
+    <rect x="393" y="82" width="68" height="32" rx="16" fill="#F1FBD0"/>
+    <text x="427" y="103" fill="#000000">章节六</text>
+  </g>
+</svg>
