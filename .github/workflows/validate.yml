@@ -1,0 +1,54 @@
+name: Validate Skill
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Script and media regression checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install media dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+
+      - name: Install validation dependencies
+        run: python -m pip install --upgrade pip Pillow PyYAML
+
+      - name: Validate skill metadata and shell syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          skill = Path("skill/progress-bar-studio/SKILL.md").read_text(encoding="utf-8")
+          if not skill.startswith("---\n"):
+              raise SystemExit("SKILL.md must begin with YAML frontmatter")
+          frontmatter = skill.split("---\n", 2)[1]
+          metadata = yaml.safe_load(frontmatter)
+          for key in ("name", "description", "compatibility"):
+              if not metadata.get(key):
+                  raise SystemExit(f"Missing required frontmatter field: {key}")
+          PY
+          sh -n skill/progress-bar-studio/scripts/*.sh
+          python -m py_compile skill/progress-bar-studio/scripts/*.py
+          git diff --check HEAD
+
+      - name: Run media workflow regression suite
+        run: python -m unittest discover -s tests -v

@@ -36,16 +36,27 @@ the result, ask it before producing the card.
 
 Show the exact source filenames and preserved originals; video duration,
 dimensions, fps, audio, and file size; optional character, palette, and style
-reference; target editor, orientation, output width, fps, output folder, and
-inferred defaults.
+reference; target editor and orientation. Show the output folder, using the
+source-video directory as the inferred default when the user has not specified
+one, plus a no-overwrite versioning note. Show all three output resolutions:
+1080p (1920 pixels wide), 2K (2560 pixels wide), and 4K (3840 pixels wide),
+with a planning size range for each based on the source duration, fps, and
+provisional strip height. Calculate available disk space in the actual approved
+or inferred output folder, not the source-video folder when they differ.
 
-Confirm the source and delivery brief. Do not start transcription, image
-generation, or media rendering before this approval.
+Confirm the source and delivery brief, including output folder and selected
+output resolution. Do not start transcription, image generation, or media
+rendering before this approval. Immediately after approval, reserve a unique
+delivery directory with `prepare_delivery.py`; record the returned path and
+version in the Step 01 decision log. If the source has no audio, present the
+manual timestamped-chapter path rather than implying automatic transcription
+will be available.
 
 ### Step 02 - Character mode and identity
 
-For `no-character`, show the recorded choice and confirm that all styles will be
-character-free.
+When `no-character` was explicitly chosen in Step 01, record that decision and
+skip a separate Step 02 card. Do not ask a second confirmation with no new
+artifact to inspect.
 
 For `single` or `four-frame`, show the original and generated assets side by
 side; identity anchors; Alpha, multi-background, edge, foot-baseline, and loop
@@ -76,9 +87,11 @@ full video before this approval.
 
 ### Step 05 - Delivery and render authorization
 
-Before rendering, show exact output files, dimensions, fps, duration, codec,
-estimated size, available disk space, output version, target editor, and whether
-a 15-second sample is needed or explicitly skipped.
+Before rendering, show exact output files, approved output folder, dimensions,
+fps, duration, codec, available disk space, output version, target editor, and
+whether a 15-second sample is needed or explicitly skipped. If a sample was
+rendered, show its final-size estimate. If it was skipped, show only the
+revised planning range and state that editor import remains unverified.
 
 Confirm full-duration render authorization. After rendering, show final
 acceptance evidence: decoded Alpha, codec/profile, duration/frame count, chapter

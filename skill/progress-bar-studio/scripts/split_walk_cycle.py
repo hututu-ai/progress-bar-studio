@@ -67,7 +67,7 @@ def main() -> int:
             frame_files.append(filename)
 
         bottom_spread = max(visible_bottoms) - min(visible_bottoms)
-        if bottom_spread > max(4, round(height * 0.04)):
+        if bottom_spread > max(2, round(height * 0.005)):
             warnings.append(
                 f"Visible ground line varies by {bottom_spread}px; inspect for foot sliding."
             )

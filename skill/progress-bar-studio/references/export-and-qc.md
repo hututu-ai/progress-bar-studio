@@ -19,15 +19,33 @@ Documented SDK support alone is insufficient.
 
 ## Size planning
 
-Encode the approved 15-second sample with final settings, then estimate:
+At Step 01, run
+`scripts/estimate_export_size.py <source-video> --output-dir <output-folder>`
+and show a planning range for all three confirmed output-resolution options:
+
+- 1080p: 1920 pixels wide;
+- 2K: 2560 pixels wide;
+- 4K: 3840 pixels wide.
+
+The planning range must use the real source duration and fps. It is deliberately
+a range because the final strip height and animation complexity are not known
+until the visual design is approved. Do not present a generic file-size claim as
+an exact estimate.
+
+After Step 04, encode the approved 15-second sample with final settings, then
+calculate the final full-render estimate:
 
 ```text
 estimated full size =
-sample bytes × full duration / sample duration
+sample bytes x full duration / sample duration
 ```
 
-Check free disk space before full encoding. Keep room for the output, temporary
-files, and validation reads.
+The sample is required before claiming editor compatibility or a final
+sample-derived size estimate. When the user explicitly skips it, keep the
+planning range as an estimate, mark editor import as unverified, and do not call
+the number final. Before Step 05 authorization, show the applicable estimate
+alongside available disk space in the approved output folder. Keep room for the
+output, temporary files, and validation reads.
 
 ## Required checks
 

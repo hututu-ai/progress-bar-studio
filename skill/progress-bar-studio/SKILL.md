@@ -1,13 +1,45 @@
 ---
 name: progress-bar-studio
 description: "Create custom animated chapter progress bars through a five-step workflow: upload media, optionally generate a same-IP single walking pose or 4-frame walk cycle, derive semantic chapters, choose one of four presets or upload a favorite progress-bar reference for a custom style, edit colors, then preview and export transparent assets. Use for video chapter analysis, reference-led progress-bar reconstruction, character-led progress indicators, transparent PNG/WebP frames, sprite sheets, static style previews, and 4K ProRes 4444 MOV overlays for 剪映/CapCut, Premiere, Final Cut, or similar editors."
+compatibility: "Requires local file access plus ffmpeg, ffprobe, and Python 3. Pillow is needed for four-frame character cycles. Transcription, image editing, and editor-import testing depend on the host."
+metadata:
+  version: "0.2.1"
 ---
 
-# Progress Bar Studio
+# ElleFlow｜小人走路视频进度条动画
 
 Create a reusable animated chapter progress bar that matches the source video,
 keeps the user in control through one explicit confirmation at every step, and
 exports a genuinely transparent editing asset.
+
+## First-run onboarding
+
+On the first turn after the Skill is invoked, when the user has not supplied a
+usable source video or a concrete editing request, send a short welcome message
+before explaining any workflow. Lead with what the user can send next. Do not
+surface internal terms such as five-step workbench, Alpha, ProRes, manifests,
+or QC in this message. Do not start media processing until a source video is
+provided.
+
+Reply in the user's language. For a Chinese-speaking user, use this message:
+
+```text
+ElleFlow｜小人走路视频进度条动画
+
+直接把一段带声音的视频发给我，我会帮你把内容切成清晰章节，并做成可叠加到剪映、PR 等剪辑软件里的动态进度条。
+
+你可以这样开始：
+- 只发视频：我先帮你划分视频章节。
+- 视频 + 角色图：让你的 IP 跟着进度条移动。
+- 视频 + 参考图：按你喜欢的版式做一版。
+- 视频 + 一个颜色：按你的品牌色设计。
+
+最简单的方式：直接上传视频，然后说“给这个视频做进度条”。
+```
+
+When a source video is supplied, acknowledge the files and begin only the
+Step 01 material brief. Keep technical implementation details out of the
+opening response unless the user asks for them.
 
 ## Product contract
 
@@ -32,22 +64,49 @@ transcription, frame preparation, rendering, and Alpha QC. Do not claim that a
 prototype webpage directly generates or exports media unless its backend is
 actually connected and tested.
 
+## Environment preflight
+
+At Step 01, run
+`scripts/preflight.py --source-video <source-video> --output-dir <output-folder> --json`
+before transcription, image generation, or rendering. Treat a reported blocker
+as a stop condition and show the matching next action. `SOURCE_AUDIO_MISSING`
+is a warning rather than a false promise: request an editable timestamped chapter
+list, or ask for a version with audio before automatic chapter analysis. Do not
+silently fall back from a transparent MOV request when FFmpeg or the ProRes
+encoder is unavailable.
+
+The preflight reports host-dependent transcription and image editing as warnings,
+not guarantees. If transcription is unavailable, ask the user for an editable
+timestamped chapter list; do not divide the video into equal durations. If image
+editing is unavailable, offer no-character or the original single-pose path.
+
 ## Inputs and defaults
 
 Collect or infer only what is needed:
 
-- source video, or exact duration when no video is available;
+- source video (required for a renderable project). If no source video is
+  available, offer planning-only advice but do not enter the production workflow,
+  derive speech-based chapters, render a preview, or claim a deliverable;
 - optional chapter labels/timestamps; otherwise derive them from speech;
 - character choice: uploaded character or no character;
 - when a character is used, animation choice: single-pose light motion or one
   fixed 4-frame cycle;
 - one of four preset styles or one uploaded progress-bar reference for a custom
   style, plus an editable palette, HEX value, or palette image;
-- target editor, canvas orientation, frame rate, resolution, and output folder.
+- target editor, canvas orientation, output resolution, and output folder.
 
 Do not ask the user to choose frame count or character placement. The only
 animation choices are `single` and `four-frame`; the selected style determines
 placement. Ask only for genuinely missing choices and infer technical defaults.
+
+Treat delivery folder and output resolution as material-brief decisions. Ask for both
+in the same Step 01 confirmation card. If the user has not specified a delivery
+folder, default to the exact directory containing the source video; present that
+path as an inferred default and never overwrite an existing output. If the user
+has not chosen a resolution, show 1080p (1920 pixels wide), 2K (2560 pixels
+wide), and 4K (3840 pixels wide), with a size-planning range for each. The user may approve one inferred recommendation, but do not silently default to
+4K. A full-frame canvas is a separate explicit request, not the meaning of the
+transparent-strip resolution presets.
 
 Never invent, download, silently reuse, or package a character from another
 task. Preserve the uploaded file unchanged. Codex owns same-IP pose generation,
@@ -64,9 +123,12 @@ When a source video exists, probe it before designing. Transcribe speech when
 timing is absent and prefer 4–7 semantic chapters with labels of 2–6 Chinese
 characters. Never divide by equal duration when speech reveals real transitions.
 
-Default delivery when unspecified:
+Default delivery when the user approves the inferred material brief:
 
-- a 3840-pixel-wide transparent strip with layout-derived height;
+- the exact folder containing the source video, with versioned filenames if an
+  output name already exists;
+- a user-confirmed 1080p (1920 pixels wide), 2K (2560 pixels wide), or 4K
+  (3840 pixels wide) transparent strip, with layout-derived height;
 - source frame rate, otherwise 30 fps, and exact source duration;
 - ProRes 4444 MOV master with no audio;
 - lightweight MP4 composite preview with source audio;
@@ -74,9 +136,10 @@ Default delivery when unspecified:
   and cycle manifest when a character is used;
 - chapter-transition and multi-background QC images.
 
-Interpret “4K progress bar” as a 3840-pixel-wide strip unless the user requests
-a full 3840×2160 or vertical 2160×3840 canvas. Explain that the strip avoids
-encoding unused transparent pixels.
+Interpret 1080p, 2K, and 4K as 1920-, 2560-, and 3840-pixel-wide transparent
+strips unless the user explicitly requests a full 1920x1080, 2560x1440,
+3840x2160, or vertical canvas. Explain that the strip avoids encoding unused
+transparent pixels.
 
 ## Canonical five-step workflow
 
@@ -88,9 +151,25 @@ file size, and available disk space. Accept an optional original IP image and
 optional palette/reference image in the same step.
 
 Present one material brief containing the exact files, duration, dimensions,
-fps, audio, character choice, intended editor, output size, and output folder.
-Stop for **Step 01 material approval** before transcription, image generation,
-or rendering. Label every inferred technical default as inferred.
+fps, audio, character choice, intended editor, output folder, and all three
+output resolutions: 1080p (1920 pixels wide), 2K (2560 pixels wide), and 4K
+(3840 pixels wide). Run
+`scripts/estimate_export_size.py <source-video> --output-dir <output-folder>`
+to show a planning size range and available space in the actual delivery folder
+for every resolution. State that the range is based on source duration, fps, and
+a provisional strip height, and that a 15-second sample will produce the final
+estimate after style approval.
+
+Ask for one material-brief approval that includes the source, output folder, and
+selected output resolution. If no folder was specified, the source-video
+directory is the inferred default; if no resolution was specified, recommend one
+based on the source but require approval before continuing. Immediately after
+approval, run
+`scripts/prepare_delivery.py --source-video <source-video> --output-dir <output-folder> --character-mode <none|single-pose|walk-cycle> --json`
+to reserve a new versioned delivery directory. Use its returned directory for
+all project files. Stop for **Step 01 material approval** before transcription,
+image generation, or rendering. Label every inferred technical default as
+inferred.
 
 ### 2. Generate or skip the character
 
@@ -111,10 +190,11 @@ Use image editing with the uploaded source as the identity reference. Reject and
 retry any result that redesigns the IP. Obtain explicit identity approval before
 placing the character into progress-bar styles.
 
-If no character is used, still show a short no-character summary and obtain
-**Step 02 character-mode approval** before deriving chapters. If the user rejects
-the character result, regenerate only the character assets; do not re-probe the
-video.
+If the user explicitly chose `no-character` in Step 01, record it as approved
+in the decision log and proceed directly to Step 03; do not ask a second,
+content-free confirmation. Use a separate Step 02 approval only when a character
+asset was generated, edited, or repaired. If the user rejects a character result,
+regenerate only character assets; do not re-probe the video.
 
 ### 3. Derive chapters
 
@@ -173,14 +253,18 @@ placement changes later, invalidate only Step 05 approval.
 
 Render deliverables from the approved configuration. Offer a 15-second
 transparent sample crossing a chapter boundary when editor compatibility or file
-size is uncertain. The user may explicitly skip the sample and authorize the
-full render after approving the static design; record that choice instead of
-forcing another gate.
+size is uncertain. The sample is required before any claim of editor-import
+compatibility or a sample-derived final size estimate. The user may skip the
+sample only by explicitly accepting that the delivery estimate remains a planning
+range and editor import remains unverified.
 
-Before any full-duration encode, present the delivery manifest, estimated size,
-available disk space, sample choice, and target editor. Ask for **Step 05 full
-render authorization**. After encoding, present Alpha, codec, duration, frame,
-boundary, checksum, and editor-import evidence as the final acceptance card.
+Before any full-duration encode, present the delivery manifest, available disk
+space in the approved output folder, sample choice, and target editor. When a
+sample exists, show the sample-derived final size estimate. When the sample was
+skipped, show the revised planning range and label it as non-final. Ask for
+**Step 05 full render authorization**. After encoding, present Alpha, codec,
+duration, frame, boundary, checksum, and editor-import evidence as the final
+acceptance card.
 
 Before full encoding, confirm disk space and version outputs. After encoding:
 
@@ -196,10 +280,10 @@ confirmation.
 
 ## Five-step confirmation policy
 
-Use exactly five confirmation checkpoints, one for each canonical step:
+Use up to five confirmation checkpoints, one for each risk-bearing decision:
 
 1. material brief;
-2. character mode and identity;
+2. character identity, only when a character was generated or edited;
 3. chapter timeline;
 4. style, palette, placement, and static preview;
 5. delivery manifest and full-render authorization.
@@ -295,11 +379,18 @@ Never silently replace an Alpha MOV request with H.264, ordinary HEVC, ProRes
 422, black-background video, or VP9 WebM.
 
 Keep source media unchanged. Place intermediate files in a task-specific work
-directory and user-facing deliverables in the task output directory.
+directory. Place user-facing deliverables in the approved output folder; when no
+folder was specified, this is the exact directory containing the source video.
+Never overwrite an existing deliverable: add a version suffix instead.
 
 ## Bundled resources
 
-- `scripts/probe_video.sh`: probe video and available disk space.
+- `scripts/preflight.py`: reports local dependency, media, output-folder, and
+  disk-space readiness before Step 01 approval.
+- `scripts/prepare_delivery.py`: reserves a versioned delivery directory after
+  Step 01 approval, without overwriting an earlier job.
+- `scripts/estimate_export_size.py`: estimates 1080p, 2K, and 4K transparent
+  master size ranges from the source duration and fps before Step 01 approval.
 - `scripts/verify_alpha_mov.sh`: validate ProRes 4444 Alpha across every frame.
 - `scripts/make_multibg_preview.sh`: composite one RGBA PNG over six backgrounds.
 - `scripts/split_walk_cycle.py`: split an aligned 4-frame transparent

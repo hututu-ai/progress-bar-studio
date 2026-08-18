@@ -1,8 +1,10 @@
-# Progress Bar Studio
+# ElleFlow｜小人走路视频进度条动画
 
-> 上传完整视频，自动分析章节、生成角色行走动画，并导出可直接叠加到剪映等软件中的透明进度条。
+> 让你的 IP 小人沿着视频章节进度条走起来，导出可直接叠加到剪映等软件的透明动画。
 
-做一条章节进度条，通常要自己听内容、划章节、卡时间、做动画、调关键帧。
+## ElleFlow 是什么
+
+做一条带小人行走效果的章节进度条，通常要自己听内容、划章节、卡时间、做动画、调关键帧。
 
 现在，把视频交给 AI：
 
@@ -14,6 +16,25 @@
 
 ---
 
+## 安装后，先这样开始
+
+安装完成后，不需要记任何指令。先把一段带声音的视频发给 Agent，它应先告诉你这个 Skill 能做什么，并提示你可以继续发送：
+
+- **只发视频**：先分析内容，给出章节划分；
+- **视频 + 角色图**：让你的 IP 跟着进度条移动；
+- **视频 + 参考图**：按喜欢的版式重建；
+- **视频 + 一个颜色**：按品牌色设计。
+
+最简单的一句话是：
+
+```text
+给这个视频做进度条。
+```
+
+首次引导不应抛出“Alpha、ProRes、五步工作台、manifest”等内部术语；这些只在用户需要确认设计或导出格式时再说明。
+
+---
+
 ## 它做了什么
 
 你只需要提供：
@@ -22,6 +43,11 @@
 - 一张角色图（可选）；
 - 一张喜欢的进度条参考图（可选）；
 - 想使用的颜色（可选）。
+
+开始时，Agent 会先和你确认两件事：
+
+- **成品放在哪**：未指定时，默认放在源视频所在文件夹，且不会覆盖同名文件；
+- **导出多清晰**：在 1080p、2K、4K 中选择。它会先根据真实视频时长和帧率估算三档文件大小，设计确认后再用短样片给出更准确的最终估算。
 
 然后告诉 Agent：
 
@@ -103,18 +129,27 @@ progress-bar-studio/
 
 ---
 
-## 支持的 Agent
+## Agent 与环境兼容性
 
-| Agent | 支持情况 | 项目级目录 | 调用方式 |
-| --- | --- | --- | --- |
-| **Codex Desktop / CLI** | 已完成完整媒体流程验证 | `.agents/skills/` | 直接描述需求，Codex 自动加载 Skill |
-| **Claude Code** | 支持标准 Agent Skill | `.claude/skills/` | 输入 `/progress-bar-studio` 或直接描述需求 |
-| **Cursor Agent / CLI** | 支持标准 Agent Skill | `.cursor/skills/` 或 `.agents/skills/` | 输入 `/progress-bar-studio`，也支持自动调用 |
-| **GitHub Copilot CLI / coding agent / IDE agent mode** | 支持标准 Agent Skill | `.github/skills/` 或 `.agents/skills/` | 直接描述需求，让 Copilot 加载 Skill |
+本项目遵循 Agent Skills 的 `SKILL.md` 格式；能加载该格式的 Agent 才能识别工作流。是否能完成媒体制作，还取决于宿主是否允许读取本地文件、运行脚本、调用图像能力以及导入剪辑软件验证。
 
-目录规则参考 [Claude Code Skills](https://code.claude.com/docs/en/slash-commands)、[Cursor Agent Skills](https://cursor.com/docs/skills) 和 [GitHub Copilot Agent Skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills)。
+| Agent | 常见安装位置 | 说明 |
+| --- | --- | --- |
+| **Codex** | `~/.codex/skills/` 或项目级技能目录 | 需有本地媒体读取和命令执行能力。 |
+| **Claude Code** | `~/.claude/skills/` 或插件安装目录 | 需确认本机能运行媒体脚本。 |
+| **Cursor** | `.cursor/skills/` 或 `.agents/skills/` | 以 Cursor 当前 Skills 文档为准。 |
+| **GitHub Copilot** | `.github/skills/` 或 `.agents/skills/` | 以 Copilot 当前 Agent Skills 文档为准。 |
 
-其他 Agent 只要支持 `SKILL.md` 标准，并具备本地文件读取、命令执行和图像处理能力，也可以使用这套工作流。
+安装不等于媒体链路已验证。开始处理任何视频前，先运行：
+
+```bash
+python3 skill/progress-bar-studio/scripts/preflight.py \
+  --source-video /path/to/video.mp4 \
+  --output-dir /path/to/output \
+  --json
+```
+
+它会检查 `ffmpeg`、`ffprobe`、ProRes 4444 编码器、Pillow、目标文件夹可写性和可用磁盘；没有音频时会要求你补一份可编辑的章节时间表，或换用带声音的版本。转写、图像编辑和剪映/PR 导入测试仍取决于正在使用的 Agent 与本机软件。
 
 ---
 
@@ -208,6 +243,9 @@ Skill 已附带以下工具：
 
 | 工具 | 用途 |
 | --- | --- |
+| `preflight.py` | 检查媒体依赖、ProRes 4444 编码器、输出文件夹与磁盘空间 |
+| `estimate_export_size.py` | 根据真实时长、帧率和输出文件夹估算 1080p、2K、4K 文件体积 |
+| `prepare_delivery.py` | Step 01 确认后创建版本化交付文件夹，避免同名任务覆盖 |
 | `probe_video.sh` | 检查视频尺寸、帧率、时长、音频和磁盘空间 |
 | `split_walk_cycle.py` | 拆分四帧精灵图、校验脚底基线、生成 WebP |
 | `make_multibg_preview.sh` | 在多种背景上检查透明角色边缘 |
@@ -219,8 +257,11 @@ Skill 已附带以下工具：
 
 ```text
 progress-bar-studio/
+├── .github/workflows/validate.yml   # GitHub Actions 回归验证
+├── CHANGELOG.md                     # 版本与迁移记录
+├── LICENSE                          # MIT 开源许可证
 ├── README.md
-├── docs/images/                     # README 截图
+├── tests/                           # 小媒体夹具回归测试
 └── skill/progress-bar-studio/
     ├── SKILL.md                     # 主工作流与执行规则
     ├── agents/openai.yaml           # Codex 展示信息
@@ -228,6 +269,21 @@ progress-bar-studio/
     ├── references/                  # 章节、角色、确认与导出规范
     └── scripts/                     # 视频探测、拆帧和透明度质检
 ```
+
+## 本地验证
+
+发布前可在仓库根目录执行：
+
+```bash
+python3 -m pip install Pillow
+python3 -m unittest discover -s tests -v
+```
+
+测试会生成临时短视频，覆盖：无音频提示、竖屏探测、损坏媒体、不可写输出目录、磁盘不足、透明 Alpha 校验、同名任务版本化与无角色路径。GitHub Actions 会在推送到 `main` 或提交 Pull Request 时运行同一套检查。
+
+## 许可证
+
+本项目采用 [MIT License](LICENSE)，可使用、修改和分发，但须保留许可证与版权声明。
 
 ## 使用提醒
 
