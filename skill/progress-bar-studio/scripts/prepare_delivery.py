@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reserve a versioned Progress Bar Studio delivery directory."""
+"""Reserve a versioned ElleFlow delivery directory."""
 
 from __future__ import annotations
 
@@ -83,27 +83,23 @@ def main() -> int:
             "walk-preview.webp",
         ],
     }[args.character_mode]
+    final_artifacts = ["progress_bar.mov", "chapters.json", "style.json", "qc/"]
+
     result = {
         "deliveryDirectory": str(delivery_dir),
         "sourceVideo": str(source),
         "characterMode": args.character_mode,
         "characterOutputs": character_outputs,
-        "nextCheckpoint": "chapter-analysis"
-        if args.character_mode == "none"
-        else "character-confirmation",
-        "artifacts": [
-            "progress_bar.mov",
-            "preview.mp4",
-            "chapters.json",
-            "style.json",
-            "qc/",
-        ],
+        "nextCheckpoint": "combined-preview",
+        "sampleArtifacts": ["sample_progress_bar.mov"],
+        "artifacts": final_artifacts,
     }
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
         print(f"Reserved: {delivery_dir}")
         print(f"Character mode: {args.character_mode}")
+        print("Final delivery: transparent overlay MOV")
         print(f"Next checkpoint: {result['nextCheckpoint']}")
     return 0
 

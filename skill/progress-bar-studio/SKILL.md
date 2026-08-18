@@ -1,408 +1,304 @@
 ---
 name: progress-bar-studio
-description: "Create custom animated chapter progress bars through a five-step workflow: upload media, optionally generate a same-IP single walking pose or 4-frame walk cycle, derive semantic chapters, choose one of four presets or upload a favorite progress-bar reference for a custom style, edit colors, then preview and export transparent assets. Use for video chapter analysis, reference-led progress-bar reconstruction, character-led progress indicators, transparent PNG/WebP frames, sprite sheets, static style previews, and 4K ProRes 4444 MOV overlays for 剪映/CapCut, Premiere, Final Cut, or similar editors."
+description: "Create ElleFlow animated chapter progress bars for long or short videos, Vlogs, knowledge videos, and video series. Creators can upload a recommended 720p analysis copy to confirm chapters, choose a walking IP character or a plain bar, select a style and color, optionally save a reusable preset, and receive a high-resolution transparent ProRes 4444 MOV to align over their original video in an editor. Use for lazy, no-keyframe chapter progress-bar creation, character-led progress indicators, reusable creator SOP presets, transparent PNG/WebP frames, and ProRes 4444 MOV overlays."
 compatibility: "Requires local file access plus ffmpeg, ffprobe, and Python 3. Pillow is needed for four-frame character cycles. Transcription, image editing, and editor-import testing depend on the host."
 metadata:
-  version: "0.2.1"
+  version: "0.2.4"
 ---
 
 # ElleFlow｜小人走路视频进度条动画
 
-Create a reusable animated chapter progress bar that matches the source video,
-keeps the user in control through one explicit confirmation at every step, and
-exports a genuinely transparent editing asset.
+Create a chapter progress bar for any long or short video, Vlog, knowledge
+video, or video series. ElleFlow uses a lightweight analysis copy to understand
+content and draft chapters, then delivers a high-resolution transparent progress
+bar for the creator to place over the original project in an editor. This keeps
+large original videos local and avoids hand-marking timecodes or keyframes.
 
 ## First-run onboarding
 
-On the first turn after the Skill is invoked, when the user has not supplied a
-usable source video or a concrete editing request, send a short welcome message
-before explaining any workflow. Lead with what the user can send next. Do not
-surface internal terms such as five-step workbench, Alpha, ProRes, manifests,
-or QC in this message. Do not start media processing until a source video is
+On the first turn after the Skill is invoked, when the creator has not supplied
+a usable source video or a concrete editing request, send a short welcome
+message before explaining any workflow. Lead with what the creator can send
+next. Do not surface internal terms such as Alpha, ProRes, manifests, QC, or
+workbench in this message. Do not start media processing until a video is
 provided.
 
-Reply in the user's language. For a Chinese-speaking user, use this message:
+Reply in the creator's language. For a Chinese-speaking creator, use:
 
 ```text
 ElleFlow｜小人走路视频进度条动画
 
-直接把一段带声音的视频发给我，我会帮你把内容切成清晰章节，并做成可叠加到剪映、PR 等剪辑软件里的动态进度条。
+直接把你想加进度条的视频拖进来。我会先理解内容、整理章节，再做成一条能让 IP 小人跟着走的动态进度条。
+
+建议上传 720p 的轻量分析版：它只用来理解内容和拆分章节，不会替代你的高清原片。最后你会拿到高清透明底进度条，拖回原来的剪映工程就能用。
 
 你可以这样开始：
-- 只发视频：我先帮你划分视频章节。
-- 视频 + 角色图：让你的 IP 跟着进度条移动。
+- 只发视频：我先帮你整理章节。
+- 视频 + 角色图：让你的 IP 跟着进度条走。
 - 视频 + 参考图：按你喜欢的版式做一版。
-- 视频 + 一个颜色：按你的品牌色设计。
+- 视频 + 一张配色图：提取颜色做成你的风格。
 
 最简单的方式：直接上传视频，然后说“给这个视频做进度条”。
 ```
 
-When a source video is supplied, acknowledge the files and begin only the
-Step 01 material brief. Keep technical implementation details out of the
-opening response unless the user asks for them.
+When a video is supplied, acknowledge it and begin with the creator-first order
+below. Keep implementation details out of the opening response unless the
+creator asks for them.
 
-## Product contract
+## Creator-first order
 
-Use the approved five-step workbench as the canonical order:
+Follow this order. Do not move output folder, resolution, or file-size questions
+into the first creative conversation.
 
-1. upload material;
-2. generate or skip a character;
-3. derive chapters;
-4. choose a preset or custom reference style and edit colors;
-5. preview and export.
+1. **Analysis video and chapters**: preserve and probe the uploaded analysis
+   copy, then make an editable chapter draft from its actual content. Show that
+   draft first and let the creator confirm or revise it before any visual choice.
+2. **Character**: ask whether the creator wants a plain progress bar, a single
+   light-motion character, or a four-frame walking character. When a character
+   is used, request or reuse an explicitly approved character asset.
+3. **Style and color**: show S1-S4 and one separate `Custom reference` route,
+   then ask for a color, HEX value, palette image, or a frame from the video.
+   Extract a compact editable palette from an image when one is supplied.
+4. **Reusable preset**: after character, style, and color are approved, ask
+   whether to save that combination as a reusable local ElleFlow preset.
+5. **Overlay export**: ask for the original video's canvas ratio, the output
+   folder, and 1080p/2K/4K export resolution. Show the relevant planning size
+   range and available output space.
+6. **Combined preview**: show chapters, character, style, and palette together
+   on a representative analysis-video frame. This is the final creative check.
+7. **Sample then final**: render a 15-second transparent sample crossing a
+   chapter boundary. Only after approval may the final transparent MOV render.
 
-Before starting, read
-[references/confirmation-gates.md](references/confirmation-gates.md). Treat
-each step as a small agreement with the user: show what was understood, show the
-current evidence or preview, ask one short confirmation question, and continue
-only after approval. Never hide a costly generation or render behind a generic
-"next" action.
+Treat each decision as one short, focused question. Do not ask the creator to
+choose frame count or character placement: the selected style determines both.
+Do not start a costly render while a decision is awaiting approval.
 
-When a webpage accompanies the Skill, treat it as the control surface for files,
-choices, previews, and configuration. Codex performs the actual image editing,
-transcription, frame preparation, rendering, and Alpha QC. Do not claim that a
-prototype webpage directly generates or exports media unless its backend is
-actually connected and tested.
+## Lightweight analysis copy and chapter confirmation
 
-## Environment preflight
+The uploaded video is an analysis copy, not the final publishing asset. Recommend
+`720p` because it keeps uploads manageable while retaining enough detail for
+most Vlogs, talking-head clips, knowledge videos, and series content. `480p` is
+a fallback for very long videos or slow networks, not the default recommendation.
 
-At Step 01, run
-`scripts/preflight.py --source-video <source-video> --output-dir <output-folder> --json`
-before transcription, image generation, or rendering. Treat a reported blocker
-as a stop condition and show the matching next action. `SOURCE_AUDIO_MISSING`
-is a warning rather than a false promise: request an editable timestamped chapter
-list, or ask for a version with audio before automatic chapter analysis. Do not
-silently fall back from a transparent MOV request when FFmpeg or the ProRes
-encoder is unavailable.
+Before upload, tell the creator:
 
-The preflight reports host-dependent transcription and image editing as warnings,
-not guarantees. If transcription is unavailable, ask the user for an editable
-timestamped chapter list; do not divide the video into equal durations. If image
-editing is unavailable, offer no-character or the original single-pose path.
+```text
+建议从剪映导出 720p 轻量分析版。它只用于理解内容和做章节，不会替代你的高清原片。
+请在剪辑内容定稿后导出，并保持和原工程相同的时长、画面比例和播放速度；之后把高清透明进度条从视频开头对齐拖回原工程即可。
+```
 
-## Inputs and defaults
+Preserve source files unchanged. Run
+`scripts/preflight.py --source-video <analysis-video> --json` after receiving
+the video; an unselected output folder is a warning at this point, not a blocker.
+Probe dimensions, fps, duration, audio, and file size internally. Read
+[chapter-analysis.md](references/chapter-analysis.md), make an editable chapter
+draft with real semantic turns, show it to the creator, and ask whether the
+chapter names and boundaries are correct. Never divide a video into equal
+durations.
 
-Collect or infer only what is needed:
+Only when the source truly cannot be transcribed should you explain the
+limitation and request a timestamped chapter list. If the content depends on
+small on-screen text, slides, code, or tables that the analysis copy cannot
+reliably show, ask for a clear still or the relevant chapter names. Do not ask
+all creators for a high-resolution source by default.
 
-- source video (required for a renderable project). If no source video is
-  available, offer planning-only advice but do not enter the production workflow,
-  derive speech-based chapters, render a preview, or claim a deliverable;
-- optional chapter labels/timestamps; otherwise derive them from speech;
-- character choice: uploaded character or no character;
-- when a character is used, animation choice: single-pose light motion or one
-  fixed 4-frame cycle;
-- one of four preset styles or one uploaded progress-bar reference for a custom
-  style, plus an editable palette, HEX value, or palette image;
-- target editor, canvas orientation, output resolution, and output folder.
+Do not ask about characters, style, colors, output folder, or resolution until
+the creator has confirmed or revised the chapter draft.
 
-Do not ask the user to choose frame count or character placement. The only
-animation choices are `single` and `four-frame`; the selected style determines
-placement. Ask only for genuinely missing choices and infer technical defaults.
+## Character decision
 
-Treat delivery folder and output resolution as material-brief decisions. Ask for both
-in the same Step 01 confirmation card. If the user has not specified a delivery
-folder, default to the exact directory containing the source video; present that
-path as an inferred default and never overwrite an existing output. If the user
-has not chosen a resolution, show 1080p (1920 pixels wide), 2K (2560 pixels
-wide), and 4K (3840 pixels wide), with a size-planning range for each. The user may approve one inferred recommendation, but do not silently default to
-4K. A full-frame canvas is a separate explicit request, not the meaning of the
-transparent-strip resolution presets.
+Offer exactly these paths:
 
-Never invent, download, silently reuse, or package a character from another
-task. Preserve the uploaded file unchanged. Codex owns same-IP pose generation,
-background removal, transparent RGBA preparation, and Alpha verification. Read
-[references/character-preparation.md](references/character-preparation.md).
+- `none`: a clean progress bar with no character;
+- `single-pose`: one explicitly approved character PNG with light motion;
+- `walk-cycle`: an explicitly approved four-frame walking character.
 
-Treat every palette value as editable. If the user supplies one color, derive
-and show a compact four-swatch family: main, light surface, deep accent, and
-text. Expand internally to inactive, active-text, outline, and shadow tokens as
-needed. Do not silently default every project to pink; use the lime/black/white
-catalog only as a neutral product example.
+If the creator selects `none`, record the choice and continue directly to style.
+Do not show a content-free character approval card.
 
-When a source video exists, probe it before designing. Transcribe speech when
-timing is absent and prefer 4–7 semantic chapters with labels of 2–6 Chinese
-characters. Never divide by equal duration when speech reveals real transitions.
+For a character path, read
+[character-preparation.md](references/character-preparation.md). Preserve the
+uploaded character's identity, colors, proportions, markings, clothing,
+accessories, outline, and texture. Use image editing with the uploaded source as
+the identity reference. Reject any result that redesigns the IP.
 
-Default delivery when the user approves the inferred material brief:
+For a four-frame cycle, create one aligned sprite sheet, prepare real RGBA PNGs,
+and split it with `scripts/split_walk_cycle.py`. Show the source, output, loop,
+foot baseline, and multi-background edge check. Obtain explicit approval before
+using that character in a combined preview.
 
-- the exact folder containing the source video, with versioned filenames if an
-  output name already exists;
-- a user-confirmed 1080p (1920 pixels wide), 2K (2560 pixels wide), or 4K
-  (3840 pixels wide) transparent strip, with layout-derived height;
-- source frame rate, otherwise 30 fps, and exact source duration;
-- ProRes 4444 MOV master with no audio;
-- lightweight MP4 composite preview with source audio;
-- transparent character PNG or four PNG frames, sprite sheet, animated WebP,
-  and cycle manifest when a character is used;
-- chapter-transition and multi-background QC images.
+Never silently reuse a character from another project. A saved preset is the
+only reuse route, and it must be shown and approved for the current video.
 
-Interpret 1080p, 2K, and 4K as 1920-, 2560-, and 3840-pixel-wide transparent
-strips unless the user explicitly requests a full 1920x1080, 2560x1440,
-3840x2160, or vertical canvas. Explain that the strip avoids encoding unused
-transparent pixels.
+## Style and color decision
 
-## Canonical five-step workflow
-
-### 1. Upload material
-
-Preserve source files unchanged and probe the video with
-`scripts/probe_video.sh`. Record dimensions, fps, duration, frame count, audio,
-file size, and available disk space. Accept an optional original IP image and
-optional palette/reference image in the same step.
-
-Present one material brief containing the exact files, duration, dimensions,
-fps, audio, character choice, intended editor, output folder, and all three
-output resolutions: 1080p (1920 pixels wide), 2K (2560 pixels wide), and 4K
-(3840 pixels wide). Run
-`scripts/estimate_export_size.py <source-video> --output-dir <output-folder>`
-to show a planning size range and available space in the actual delivery folder
-for every resolution. State that the range is based on source duration, fps, and
-a provisional strip height, and that a 15-second sample will produce the final
-estimate after style approval.
-
-Ask for one material-brief approval that includes the source, output folder, and
-selected output resolution. If no folder was specified, the source-video
-directory is the inferred default; if no resolution was specified, recommend one
-based on the source but require approval before continuing. Immediately after
-approval, run
-`scripts/prepare_delivery.py --source-video <source-video> --output-dir <output-folder> --character-mode <none|single-pose|walk-cycle> --json`
-to reserve a new versioned delivery directory. Use its returned directory for
-all project files. Stop for **Step 01 material approval** before transcription,
-image generation, or rendering. Label every inferred technical default as
-inferred.
-
-### 2. Generate or skip the character
-
-If the user chooses no character, skip character generation cleanly and keep all
-four styles usable without a mascot.
-
-If a character is used:
-
-1. record silhouette, proportions, facial markings, colors, clothing,
-   accessories, outline, and texture as identity anchors;
-2. create either one right-facing walking pose or one aligned four-frame cycle;
-3. export a real RGBA PNG; for four frames, generate one shared sprite sheet,
-   remove its background, and split it with `scripts/split_walk_cycle.py`;
-4. verify Alpha, identity, visible foot baseline, edges, holes, and small details;
-5. show source, output, loop preview, and multi-background QC together.
-
-Use image editing with the uploaded source as the identity reference. Reject and
-retry any result that redesigns the IP. Obtain explicit identity approval before
-placing the character into progress-bar styles.
-
-If the user explicitly chose `no-character` in Step 01, record it as approved
-in the decision log and proceed directly to Step 03; do not ask a second,
-content-free confirmation. Use a separate Step 02 approval only when a character
-asset was generated, edited, or repaired. If the user rejects a character result,
-regenerate only character assets; do not re-probe the video.
-
-### 3. Derive chapters
-
-Read [references/chapter-analysis.md](references/chapter-analysis.md). Transcribe
-with timestamps, detect semantic turns, and present one editable manifest with
-exact starts, 2–6-character labels, and a short rationale. Keep the first start
-at zero and starts strictly increasing. Ask for confirmation of the timeline.
-
-Stop for **Step 03 chapter approval**. Do not create style previews from an
-unapproved timeline. If the chapter timeline changes later, invalidate Step 04
-and Step 05 approvals while keeping approved source and character decisions.
-
-### 4. Choose style and colors
-
-Read [references/style-system.md](references/style-system.md). Show the exact four
-presets on pure-white cards:
+Read [style-system.md](references/style-system.md). Show these four built-in
+routes on a simple comparison board:
 
 1. S1 chapter capsules;
 2. S2 segmented runway;
 3. S3 text progress;
 4. S4 divided label band.
 
-Beside the four presets, show one `Custom reference` card. When selected, read
-[references/custom-reference-style.md](references/custom-reference-style.md),
-accept one user-owned PNG, JPG, or WebP screenshot, and derive the structure
-without adding a sixth workflow step. Treat the reference as a fifth selection
-route, not a fifth built-in preset. Infer track geometry, chapter divisions,
-label hierarchy, fill behavior, character travel plane, palette, border radius,
-and shadow language; do not ask the user to choose character placement.
+Also show `Custom reference` as a separate route. When selected, read
+[custom-reference-style.md](references/custom-reference-style.md), accept one
+creator-owned PNG, JPG, or WebP reference, and extract its layout logic. Do not
+reproduce third-party logos, watermarks, copyrighted characters, or exact
+proprietary artwork.
 
-Preserve the uploaded reference unchanged. Create a concise style manifest with
-`mode: custom-reference`, source filename, inferred pattern, placement, palette
-policy, and adaptation notes. Replace source labels with the approved chapters,
-adapt the result to the real video and current-task character, and show a static
-reconstruction over the real video before animation. If the reference is too
-ambiguous to infer one safe structure, ask only whether to preserve its colors
-or apply the project palette. Do not reproduce third-party logos, watermarks,
-copyrighted characters, or exact proprietary artwork.
+Character placement is determined by the chosen route:
 
-Use the approved current-task character in all applicable thumbnails. Show the
-four-swatch palette with HEX values. Let the user select one primary preset or
-one custom reference route. Combine at most one secondary pattern only when
-requested. Do not ask placement.
+- S1: on the upper progress-line edge;
+- S2: on the segment baseline;
+- S3: above the track, clear of labels;
+- S4: inside the active band.
 
-Create one representative frame over the real video and a transparent overlay
-preview. Keep it clear of subtitles, faces, key UI, and demonstrations. Run the
-track-fit tests and make white, black, red, blue, brand-color, and checkerboard
-composites. Obtain explicit visual approval.
+Do not ask the creator to decide placement unless she explicitly requests an
+override.
 
-Stop for **Step 04 visual approval** after showing the chosen route, palette,
-chapter layout, character travel plane, real-video composite, transparent
-preview, and any custom-reference structure manifest. If the style, palette, or
-placement changes later, invalidate only Step 05 approval.
+## Color decision
 
-### 5. Preview and export
+Ask for one of these inputs:
 
-Render deliverables from the approved configuration. Offer a 15-second
-transparent sample crossing a chapter boundary when editor compatibility or file
-size is uncertain. The sample is required before any claim of editor-import
-compatibility or a sample-derived final size estimate. The user may skip the
-sample only by explicitly accepting that the delivery estimate remains a planning
-range and editor import remains unverified.
+- a HEX value or a named color;
+- a palette image or brand card;
+- a still from the creator's video;
+- permission to propose a palette from the chosen custom reference.
 
-Before any full-duration encode, present the delivery manifest, available disk
-space in the approved output folder, sample choice, and target editor. When a
-sample exists, show the sample-derived final size estimate. When the sample was
-skipped, show the revised planning range and label it as non-final. Ask for
-**Step 05 full render authorization**. After encoding, present Alpha, codec,
-duration, frame, boundary, checksum, and editor-import evidence as the final
-acceptance card.
+Extract or derive a small editable palette containing main, light surface, deep
+accent, and text colors. Show the swatches with HEX values before approval. Do
+not silently default every project to pink, and do not copy a third party's logo
+or proprietary color treatment as if it belongs to the creator.
 
-Before full encoding, confirm disk space and version outputs. After encoding:
+## Reusable ElleFlow presets
+
+After the character, style, and palette are approved, ask:
+
+```text
+要把这套角色、样式和颜色保存成下次可复用的 ElleFlow 预设吗？
+```
+
+On an explicit yes, ask for a preset name and whether it should be the suggested
+default. Use `scripts/preset_library.py` to save a self-contained local preset
+with copies of only the approved character and reference assets. It never
+overwrites an existing preset.
+
+On a later project, inspect a supplied or discovered default preset first, show
+its character mode, style route, and palette, and ask whether to use it. The
+creator can reuse it, revise it for the current video, or decline it. A preset
+never carries forward source videos, chapters, output folders, file-size claims,
+or editor-import claims.
+
+## Transparent-overlay delivery decision
+
+Only after creative choices are approved, ask for the output folder and export
+resolution. The default and only standard final delivery is a transparent
+progress-bar MOV that the creator places over the original high-resolution video
+in an editor. Do not offer to re-encode the creator's full video or claim to
+deliver a finished composited MP4.
+
+Confirm that the creator will use the same final timeline as the analysis copy:
+
+```text
+这条高清透明进度条会按当前视频的时长和章节时间点制作。
+请确认：你的高清原工程与上传的分析版时长、画面比例和播放速度一致；后续只需从视频开头把进度条对齐拖进去。
+```
+
+If no folder is specified, propose the analysis-video folder as an inferred
+default. If no resolution is specified, show all three options and recommend
+one; never silently default to 4K.
+
+- 1080p: 1920-pixel-wide transparent strip;
+- 2K: 2560-pixel-wide transparent strip;
+- 4K: 3840-pixel-wide transparent strip.
+
+Run:
+
+```text
+scripts/preflight.py --source-video <analysis-video> --output-dir <output-folder> --json
+scripts/estimate_export_size.py <analysis-video> --output-dir <output-folder>
+```
+
+Treat reported blockers as stop conditions. Show the planning size range, free
+space, intended editor, and no-overwrite versioning policy. After approval, run
+`scripts/prepare_delivery.py` with the approved analysis video, output folder,
+and character mode to reserve a versioned delivery directory.
+
+## Combined preview
+
+Create a representative frame over the real analysis video and a transparent
+overlay preview. Show them together with:
+
+- the editable chapter list and exact timestamps;
+- the approved character or explicit no-character choice;
+- the style route, color swatches, and any custom-reference adaptation notes;
+- subtitle, face, UI, and chapter-label collision checks;
+- white, black, red, blue, brand-color, and checkerboard composites.
+
+Read [style-system.md](references/style-system.md) for track-fit rules. Align a
+character's visible contact foot with the progress coordinate; reject previews
+where it floats, sinks, or blocks chapter labels. Do not animate the full video
+until the creator approves this combined preview.
+
+## 15-second sample and final delivery
+
+Read [export-and-qc.md](references/export-and-qc.md). Render a 15-second
+transparent sample using the approved settings and crossing a chapter boundary.
+Show its actual size, Alpha result, and target-editor import status when tested.
+
+Only after the creator approves the sample may the final transparent master be
+rendered as `progress_bar.mov`. Do not include a full-length `preview.mp4` as a
+default deliverable. If the sample is skipped by explicit creator choice, show
+only a planning size range, label editor import as unverified, and do not call
+the estimate final.
+
+For the final transparent master, prefer QuickTime MOV, Apple ProRes 4444,
+`ap4h`, and `yuva444p10le` or decoded `yuva444p12le`. Never silently replace an
+Alpha MOV request with H.264, ordinary HEVC, ProRes 422, or a filled-background
+video.
+
+After encoding:
 
 - validate the MOV with `scripts/verify_alpha_mov.sh` and decode every frame;
 - verify codec, profile, Alpha, dimensions, fps, duration, and frame count;
-- inspect start/end and frames around every chapter boundary;
-- create the source-video composite preview and multi-background QC;
+- inspect start, end, motion, and every chapter boundary;
+- create multi-background QC;
 - calculate a checksum for large deliverables;
-- report whether the target editor was actually import-tested.
+- state whether the target editor was actually import-tested.
 
-Do not claim 剪映/CapCut compatibility without an import test or user
-confirmation.
+## Confirmation and revision policy
 
-## Five-step confirmation policy
+Use a compact confirmation card for each risk-bearing choice. Include
+`understood`, `evidence`, `confirm`, `next`, and `revise`, then ask one short
+question. Record explicit choices in `decision-log.json`.
 
-Use up to five confirmation checkpoints, one for each risk-bearing decision:
+Keep approved upstream choices when a creator changes one thing:
 
-1. material brief;
-2. character identity, only when a character was generated or edited;
-3. chapter timeline;
-4. style, palette, placement, and static preview;
-5. delivery manifest and full-render authorization.
+| Changed choice | Keep | Revisit |
+| --- | --- | --- |
+| analysis video or chapter list | none unless unchanged | every later decision |
+| character | analysis video and chapter draft | style preview, sample, full export |
+| style or color | analysis video, chapter draft, character | combined preview, sample, full export |
+| preset | current project choices | only future reuse behavior |
+| output folder or resolution | creative choices | size check, sample, full export |
 
-At every checkpoint, provide one compact confirmation card with `understood`,
-`evidence`, `confirm`, `next`, and `revise` fields. Ask one short question such
-as “这份素材简报可以确认吗？” instead of sending a long questionnaire. Record
-the answer in `decision-log.json` using the schema in
-[references/confirmation-gates.md](references/confirmation-gates.md).
-
-Never continue while a step is `awaiting_user`. Never treat silence, a file
-upload, or a button click with an ambiguous label as approval. When the user has
-already given an explicit future instruction such as “不要角色、S1 粉色、直接
-完整版”, record it as a pre-approved decision, still show the corresponding
-checkpoint summary for visibility, and avoid asking the same question again.
-
-On revision, redo only the affected step and invalidate dependent downstream
-approvals. Do not restart the whole workflow. Preserve every approved upstream
-decision and the original source files.
-
-## Design and animation
-
-Read [references/style-system.md](references/style-system.md) when choosing the
-progress-bar pattern, palette, typography, or chapter layout.
-
-Read [references/chapter-analysis.md](references/chapter-analysis.md) when
-deriving chapter timing from a video or transcript.
-
-Read [references/character-preparation.md](references/character-preparation.md)
-before editing, masking, upscaling, or generating poses from a user-uploaded
-character.
-
-Use the neutral editable starting point in
-`assets/progress-bar-template.svg` when appropriate. Use
-`assets/style-catalog.svg` for a character-free style-selection board. Render
-text and UI shapes as vectors at final resolution. Do not upscale a
-low-resolution screenshot to simulate 4K.
-
-Keep the primary action legible:
-
-- completed track uses the accent color;
-- remaining track uses a low-contrast tint;
-- current chapter is the only strongly highlighted label;
-- completed and future labels remain readable but quieter;
-- character position follows global time unless the user requests chapter jumps.
-
-Derive character placement deterministically from the selected style:
-
-- S1 chapter capsules: `on-edge`, with the feet on the upper progress line;
-- S2 segmented runway: `on-edge`, with the feet on the segment baseline;
-- S3 text progress: `above-track`, clear of all chapter labels;
-- S4 divided label band: `inside-track`, within the active chapter segment.
-
-Do not ask where to place the character. Change this mapping only when the user
-explicitly requests an override.
-
-When using `inside-track`, make the band tall enough for the character, reserve
-a quiet zone around it, and move or abbreviate nearby text instead of letting
-the character cover labels.
-
-For a single generated walking pose, use restrained vertical bob, slight
-rotation, and subtle horizontal compression to imply steps while preserving
-identity. For an approved generated walk cycle, animate the real frames and
-disable fake limb motion. Use the 4-frame playback order `1-2-3-4`. Default to
-6 fps for a soft Q-style jog and 8 fps for a brisk walk. Use a faster cadence
-only after visual approval. Preserve the user-supplied character’s colors,
-proportions, markings, clothing, accessories, outline, and texture. Default to
-right-facing movement; mirror only when the progress direction is reversed.
-
-Before approving any character-led layout, run the track-fit checks in
-[references/style-system.md](references/style-system.md). Align by the visible
-contact foot rather than the PNG canvas edge: the foot must visibly touch the
-track or band baseline without a gap, sinking, or transparent-padding offset.
-Keep the fill head, character travel anchor, and contact foot on the same
-progress coordinate. Reject previews where the character floats above the
-track, straddles chapter labels, or visually walks on a different plane.
-
-## Rendering and delivery rules
-
-Read [references/export-and-qc.md](references/export-and-qc.md) before choosing
-an Alpha codec or claiming delivery success.
-
-Prefer:
-
-```text
-QuickTime MOV
-Apple ProRes 4444
-codec tag ap4h
-yuva444p10le or decoded yuva444p12le
-```
-
-Never silently replace an Alpha MOV request with H.264, ordinary HEVC, ProRes
-422, black-background video, or VP9 WebM.
-
-Keep source media unchanged. Place intermediate files in a task-specific work
-directory. Place user-facing deliverables in the approved output folder; when no
-folder was specified, this is the exact directory containing the source video.
-Never overwrite an existing deliverable: add a version suffix instead.
+Repair the smallest failing artifact and return to the relevant decision. Never
+restart the whole project because one preview or encode failed.
 
 ## Bundled resources
 
-- `scripts/preflight.py`: reports local dependency, media, output-folder, and
-  disk-space readiness before Step 01 approval.
-- `scripts/prepare_delivery.py`: reserves a versioned delivery directory after
-  Step 01 approval, without overwriting an earlier job.
-- `scripts/estimate_export_size.py`: estimates 1080p, 2K, and 4K transparent
-  master size ranges from the source duration and fps before Step 01 approval.
-- `scripts/verify_alpha_mov.sh`: validate ProRes 4444 Alpha across every frame.
-- `scripts/make_multibg_preview.sh`: composite one RGBA PNG over six backgrounds.
-- `scripts/split_walk_cycle.py`: split an aligned 4-frame transparent
-  sprite sheet, validate Alpha and ground-line consistency, and create an
-  animated WebP preview plus manifest.
-- `references/style-system.md`: patterns, palettes, typography, and layout rules.
-- `references/custom-reference-style.md`: upload-to-manifest rules for adapting a
-  user-owned progress-bar reference inside Step 04.
-- `references/confirmation-gates.md`: five-step user confirmation cards,
-  decision-log schema, dependency invalidation, and retry rules.
-- `references/character-preparation.md`: faithful transparent-PNG preparation and QC.
-- `references/chapter-analysis.md`: transcript-to-chapter timing rules.
-- `references/export-and-qc.md`: codecs, Alpha validation, size, and editor checks.
+- `scripts/preflight.py`: dependency, analysis-video, output-folder, and disk-space checks.
+- `scripts/estimate_export_size.py`: 1080p, 2K, and 4K transparent-export planning ranges.
+- `scripts/prepare_delivery.py`: versioned delivery-directory reservation.
+- `scripts/preset_library.py`: explicit save and inspection of creator presets.
+- `scripts/verify_alpha_mov.sh`: ProRes 4444 Alpha validation across every frame.
+- `scripts/make_multibg_preview.sh`: RGBA compositing over six backgrounds.
+- `scripts/split_walk_cycle.py`: four-frame splitting, baseline validation, and WebP preview.
+- `references/chapter-analysis.md`: content-to-chapter timing rules.
+- `references/character-preparation.md`: faithful character preparation and QC.
+- `references/style-system.md`: style, palette, placement, and track-fit rules.
+- `references/custom-reference-style.md`: custom-reference adaptation rules.
+- `references/brand-presets.md`: save and reuse rules for creator presets.
+- `references/export-and-qc.md`: codecs, sample rules, Alpha, and editor checks.
 - `assets/progress-bar-template.svg`: editable neutral vector starting point.
-- `assets/style-catalog.svg`: four-style comparison board with neutral character markers.
+- `assets/style-catalog.svg`: four-style comparison board.

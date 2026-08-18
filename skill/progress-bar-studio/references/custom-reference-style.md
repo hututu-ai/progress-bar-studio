@@ -1,7 +1,6 @@
 # Custom reference style
 
-Use this route only inside Step 04. It extends style choice without changing the
-five-step workflow or replacing the four built-in presets.
+Use this route only during the style decision. It extends style choice without adding a separate creator decision or replacing the four built-in presets.
 
 ## Accepted input
 
@@ -24,7 +23,8 @@ frame only when the track, labels, or chapter state cannot be distinguished.
    character, logo, portrait, watermark, or brand mark contained in the source.
 6. Rebuild lines, pills, labels, dividers, and fills as vectors at final size.
    Never upscale the screenshot and call it a 4K overlay.
-7. Show one transparent reconstruction and one composite over the real video.
+7. Show one transparent reconstruction over the analysis video, then make the
+   creator check its safe placement in the original high-resolution editing project before full export.
    Run the same track-fit, collision, contrast, and multi-background checks used
    by the presets, then obtain visual approval.
 
@@ -54,5 +54,4 @@ swatches, and keep every value editable.
 - Recreate structure and visual grammar, not exact protected artwork.
 - Never preserve third-party characters, faces, logos, or watermarks.
 - Never claim the uploaded screenshot itself is transparent or production-ready.
-- Never add a sixth workflow step. Custom output uses Step 04 visual approval
-  and Step 05 full-render authorization from the five-step confirmation policy.
+- Never add a separate custom-style decision. Custom output uses the combined design preview and the sample/full-export authorization from the creator-first confirmation policy.

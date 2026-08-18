@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.2.4 - 2026-08-18
+
+### Changed
+
+- Made a `720p` lightweight analysis copy the recommended upload path; `480p` is now a fallback for very long videos or slow networks.
+- Separated analysis from publishing: the upload is used for content understanding and chapter timing, while the original high-resolution project stays in the creator's editor.
+- Made high-resolution transparent `progress_bar.mov` the only standard final delivery.
+- Removed direct full-video compositing, composited MP4 samples, and delivery-mode choices to avoid re-upload cost, placement ambiguity, and unnecessary re-encoding.
+
+### Added
+
+- Added alignment rules requiring the analysis copy and original project to keep the same duration, aspect ratio, clip order, and playback speed.
+- Added a clear-screen or chapter-name fallback when 720p cannot expose small text, slides, code, or tables.
+
+## 0.2.3 - 2026-08-18
+
+### Changed
+
+- Made chapter confirmation the first creator decision after a video is dropped in.
+- Removed the user-facing emphasis on source audio; only explain transcription limits when they actually block chapter analysis.
+- Replaced the default long preview deliverable with two 15-second review samples: a transparent overlay and a composited video preview.
+
+### Added
+
+- Added delivery-mode choice: transparent overlay, final composited MP4, or both.
+
+## 0.2.2 - 2026-08-18
+
+### Changed
+
+- Reordered the creator experience to video, character, style, color, optional reusable preset, delivery settings, combined preview, 15-second sample, then full export.
+- Moved output folder, resolution, and size planning until after visual decisions are complete.
+- Made the combined chapter-character-style preview the final creative checkpoint before animation.
+
+### Added
+
+- Added opt-in local brand presets for approved character assets, style routes, and color palettes.
+
 ## 0.2.1 - 2026-08-18
 
 ### Changed

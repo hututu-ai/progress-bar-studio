@@ -18,6 +18,7 @@ SCRIPTS = REPOSITORY / "skill" / "progress-bar-studio" / "scripts"
 PREFLIGHT = SCRIPTS / "preflight.py"
 ESTIMATOR = SCRIPTS / "estimate_export_size.py"
 PREPARE_DELIVERY = SCRIPTS / "prepare_delivery.py"
+PRESET_LIBRARY = SCRIPTS / "preset_library.py"
 PROBE_VIDEO = SCRIPTS / "probe_video.sh"
 VERIFY_ALPHA = SCRIPTS / "verify_alpha_mov.sh"
 
@@ -204,7 +205,55 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
         result = run(str(VERIFY_ALPHA), str(transparent))
         self.assertIn("Alpha verification passed", result.stdout)
 
-    def test_versioned_delivery_and_no_character_path(self) -> None:
+    def test_saved_default_preset_copies_reusable_assets(self) -> None:
+        character = self.root / "character.png"
+        reference = self.root / "reference.png"
+        character.write_bytes(b"character asset")
+        reference.write_bytes(b"style asset")
+        library = self.root / "preset-library"
+        result = run(
+            sys.executable,
+            str(PRESET_LIBRARY),
+            "save",
+            "--name",
+            "My Vlog SOP",
+            "--library-dir",
+            str(library),
+            "--character-mode",
+            "walk-cycle",
+            "--character-image",
+            str(character),
+            "--style",
+            "custom",
+            "--style-reference",
+            str(reference),
+            "--palette",
+            "primary=#E89AB3",
+            "--palette",
+            "text=#111111",
+            "--set-default",
+            "--json",
+        )
+        payload = json_output(result)
+        preset_path = Path(payload["preset"])
+        self.assertTrue(preset_path.is_file())
+        self.assertTrue(Path(payload["defaultPreset"]).is_file())
+        self.assertEqual(payload["palette"]["primary"], "#E89AB3")
+
+        loaded = run(
+            sys.executable,
+            str(PRESET_LIBRARY),
+            "show",
+            "--preset",
+            str(preset_path),
+            "--json",
+        )
+        loaded_payload = json_output(loaded)
+        self.assertEqual(loaded_payload["character"]["mode"], "walk-cycle")
+        self.assertTrue((preset_path.parent / loaded_payload["character"]["asset"]).is_file())
+        self.assertTrue((preset_path.parent / loaded_payload["style"]["reference"]).is_file())
+
+    def test_versioned_overlay_delivery_and_no_character_path(self) -> None:
         first = run(
             sys.executable,
             str(PREPARE_DELIVERY),
@@ -233,7 +282,11 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
         self.assertTrue(Path(second_payload["deliveryDirectory"]).is_dir())
         self.assertNotEqual(first_payload["deliveryDirectory"], second_payload["deliveryDirectory"])
         self.assertEqual(first_payload["characterOutputs"], [])
-        self.assertEqual(first_payload["nextCheckpoint"], "chapter-analysis")
+        self.assertNotIn("deliveryMode", first_payload)
+        self.assertEqual(first_payload["sampleArtifacts"], ["sample_progress_bar.mov"])
+        self.assertIn("progress_bar.mov", first_payload["artifacts"])
+        self.assertNotIn("final_with_progress_bar.mp4", first_payload["artifacts"])
+        self.assertEqual(first_payload["nextCheckpoint"], "combined-preview")
 
 
 if __name__ == "__main__":
