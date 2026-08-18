@@ -53,6 +53,12 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="The user-approved character path.",
     )
+    parser.add_argument(
+        "--sample-approved",
+        action="store_true",
+        required=True,
+        help="Required explicit approval after the 15-second transparent sample.",
+    )
     parser.add_argument("--json", action="store_true")
     return parser.parse_args()
 
@@ -83,7 +89,8 @@ def main() -> int:
             "walk-preview.webp",
         ],
     }[args.character_mode]
-    final_artifacts = ["progress_bar.mov", "chapters.json", "style.json", "qc/"]
+    creator_artifacts = ["progress_bar.mov"]
+    project_records = ["chapters.json", "style.json", "qc/"]
 
     result = {
         "deliveryDirectory": str(delivery_dir),
@@ -92,7 +99,9 @@ def main() -> int:
         "characterOutputs": character_outputs,
         "nextCheckpoint": "combined-preview",
         "sampleArtifacts": ["sample_progress_bar.mov"],
-        "artifacts": final_artifacts,
+        "sampleApproved": args.sample_approved,
+        "creatorArtifacts": creator_artifacts,
+        "projectRecords": project_records,
     }
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))

@@ -1,9 +1,9 @@
 ---
 name: progress-bar-studio
-description: "Create ElleFlow animated chapter progress bars for long or short videos, Vlogs, knowledge videos, and video series. Creators can upload a recommended 720p analysis copy to confirm chapters, choose a walking IP character or a plain bar, select a style and color, optionally save a reusable preset, and receive a high-resolution transparent ProRes 4444 MOV to align over their original video in an editor. Use for lazy, no-keyframe chapter progress-bar creation, character-led progress indicators, reusable creator SOP presets, transparent PNG/WebP frames, and ProRes 4444 MOV overlays."
+description: "Create ElleFlow animated chapter progress bars for long or short videos, Vlogs, knowledge videos, and video series. Creators can upload a recommended 720p analysis copy to confirm chapters, choose a walking IP character or a plain bar through one clear Step 1-8 choice at a time, select a style and color, optionally save a reusable preset, and receive a high-resolution transparent ProRes 4444 MOV to align over their original video in an editor. Use for lazy, no-keyframe chapter progress-bar creation, character-led progress indicators, reusable creator SOP presets, transparent PNG/WebP frames, and ProRes 4444 MOV overlays."
 compatibility: "Requires local file access plus ffmpeg, ffprobe, and Python 3. Pillow is needed for four-frame character cycles. Transcription, image editing, and editor-import testing depend on the host."
 metadata:
-  version: "0.2.4"
+  version: "0.2.5"
 ---
 
 # ElleFlow｜小人走路视频进度条动画
@@ -28,46 +28,63 @@ Reply in the creator's language. For a Chinese-speaking creator, use:
 ```text
 ElleFlow｜小人走路视频进度条动画
 
-直接把你想加进度条的视频拖进来。我会先理解内容、整理章节，再做成一条能让 IP 小人跟着走的动态进度条。
+先选你现在的情况：
 
-建议上传 720p 的轻量分析版：它只用来理解内容和拆分章节，不会替代你的高清原片。最后你会拿到高清透明底进度条，拖回原来的剪映工程就能用。
+A. 我已经有一份 720p 分析版，直接上传
+B. 我有剪映工程，但不知道怎样导出分析版
+C. 我想先看看成品会是什么样
 
-你可以这样开始：
-- 只发视频：我先帮你整理章节。
-- 视频 + 角色图：让你的 IP 跟着进度条走。
-- 视频 + 参考图：按你喜欢的版式做一版。
-- 视频 + 一张配色图：提取颜色做成你的风格。
-
-最简单的方式：直接上传视频，然后说“给这个视频做进度条”。
+回复 A、B 或 C 就行。
 ```
 
-When a video is supplied, acknowledge it and begin with the creator-first order
-below. Keep implementation details out of the opening response unless the
-creator asks for them.
+When a video is supplied, acknowledge it and read
+[guided-conversation.md](references/guided-conversation.md) before sending any
+creator-facing reply. Follow its Step 1-8 cards exactly. Keep implementation
+details out of the opening response unless the creator asks for them.
+
+## Mandatory interaction contract
+
+The host may render buttons, menus, or plain text, but the conversation must work
+without platform-specific controls:
+
+- show one decision per reply, headed `进度 X/8`;
+- give a short title, no more than two explanatory sentences, and 2 to 5
+  lettered or numbered choices;
+- render the same choices as buttons when the host supports buttons; otherwise
+  let the creator reply with the letter, number, or natural language;
+- acknowledge the selected choice in plain language before presenting the next
+  step;
+- always accept `改一下` or `返回上一步` and return only to the relevant step;
+- never dump later-step options, codec settings, dimensions, filesystem paths,
+  or implementation vocabulary into a current decision.
+
+The required card wording, natural-language mapping, revisions, and recovery
+paths are in [guided-conversation.md](references/guided-conversation.md).
 
 ## Creator-first order
 
 Follow this order. Do not move output folder, resolution, or file-size questions
 into the first creative conversation.
 
-1. **Analysis video and chapters**: preserve and probe the uploaded analysis
-   copy, then make an editable chapter draft from its actual content. Show that
-   draft first and let the creator confirm or revise it before any visual choice.
-2. **Character**: ask whether the creator wants a plain progress bar, a single
-   light-motion character, or a four-frame walking character. When a character
-   is used, request or reuse an explicitly approved character asset.
-3. **Style and color**: show S1-S4 and one separate `Custom reference` route,
-   then ask for a color, HEX value, palette image, or a frame from the video.
-   Extract a compact editable palette from an image when one is supplied.
-4. **Reusable preset**: after character, style, and color are approved, ask
-   whether to save that combination as a reusable local ElleFlow preset.
-5. **Overlay export**: ask for the original video's canvas ratio, the output
-   folder, and 1080p/2K/4K export resolution. Show the relevant planning size
-   range and available output space.
-6. **Combined preview**: show chapters, character, style, and palette together
-   on a representative analysis-video frame. This is the final creative check.
-7. **Sample then final**: render a 15-second transparent sample crossing a
-   chapter boundary. Only after approval may the final transparent MOV render.
+1. **Read video**: accept or help the creator export a 720p analysis copy.
+   Probe it internally, derive an editable chapter draft, and show only the
+   chapter-confirmation card.
+2. **Confirm chapters**: let the creator accept, edit, or reanalyse the draft
+   before any visual choice.
+3. **Choose character**: offer walking character, light-motion character, plain
+   progress bar, or an approved preset through one choice card.
+4. **Choose style**: show S1-S4 visually where possible, plus one custom-
+   reference route.
+5. **Choose color**: let the creator choose video-derived color, palette image,
+   named color, or an ElleFlow recommendation.
+6. **Save preset**: offer an optional named preset only after character, style,
+   and color are approved.
+7. **Choose transparent export**: confirm the original timeline still matches
+   the analysis copy, then ask for resolution and output folder in separate
+   choice cards. Detect the source orientation internally; do not make the
+   creator calculate a canvas ratio.
+8. **Review and export**: show the combined design, make a 15-second transparent
+   sample after approval, then export the final MOV only after the sample passes.
 
 Treat each decision as one short, focused question. Do not ask the creator to
 choose frame count or character placement: the selected style determines both.
@@ -191,8 +208,9 @@ or editor-import claims.
 
 ## Transparent-overlay delivery decision
 
-Only after creative choices are approved, ask for the output folder and export
-resolution. The default and only standard final delivery is a transparent
+Only after creative choices are approved, ask for the output resolution and
+output folder in separate choice cards. Detect the analysis video's orientation
+and canvas ratio internally; do not ask a novice to calculate or type it. The default and only standard final delivery is a transparent
 progress-bar MOV that the creator places over the original high-resolution video
 in an editor. Do not offer to re-encode the creator's full video or claim to
 deliver a finished composited MP4.
@@ -208,6 +226,10 @@ If no folder is specified, propose the analysis-video folder as an inferred
 default. If no resolution is specified, show all three options and recommend
 one; never silently default to 4K.
 
+The following pixel widths are technical planning values for the transparent
+strip, not extra choices the creator must understand. Detect source orientation
+internally and include it in the export plan:
+
 - 1080p: 1920-pixel-wide transparent strip;
 - 2K: 2560-pixel-wide transparent strip;
 - 4K: 3840-pixel-wide transparent strip.
@@ -219,10 +241,14 @@ scripts/preflight.py --source-video <analysis-video> --output-dir <output-folder
 scripts/estimate_export_size.py <analysis-video> --output-dir <output-folder>
 ```
 
-Treat reported blockers as stop conditions. Show the planning size range, free
-space, intended editor, and no-overwrite versioning policy. After approval, run
-`scripts/prepare_delivery.py` with the approved analysis video, output folder,
-and character mode to reserve a versioned delivery directory.
+Only after the Step 8 sample approval, reserve the final delivery directory:
+
+```text
+scripts/prepare_delivery.py --source-video <analysis-video> --output-dir <output-folder> --character-mode <approved-mode> --sample-approved --json
+```
+
+Before that, keep samples in the task's temporary work area so a rejected or
+abandoned design does not leave an empty delivery folder.
 
 ## Combined preview
 
@@ -289,7 +315,7 @@ restart the whole project because one preview or encode failed.
 
 - `scripts/preflight.py`: dependency, analysis-video, output-folder, and disk-space checks.
 - `scripts/estimate_export_size.py`: 1080p, 2K, and 4K transparent-export planning ranges.
-- `scripts/prepare_delivery.py`: versioned delivery-directory reservation.
+- `scripts/prepare_delivery.py`: reserves a versioned final-delivery directory after sample approval.
 - `scripts/preset_library.py`: explicit save and inspection of creator presets.
 - `scripts/verify_alpha_mov.sh`: ProRes 4444 Alpha validation across every frame.
 - `scripts/make_multibg_preview.sh`: RGBA compositing over six backgrounds.
@@ -298,6 +324,7 @@ restart the whole project because one preview or encode failed.
 - `references/character-preparation.md`: faithful character preparation and QC.
 - `references/style-system.md`: style, palette, placement, and track-fit rules.
 - `references/custom-reference-style.md`: custom-reference adaptation rules.
+- `references/guided-conversation.md`: required Step 1-8 creator cards, choices, revisions, and recovery paths.
 - `references/brand-presets.md`: save and reuse rules for creator presets.
 - `references/export-and-qc.md`: codecs, sample rules, Alpha, and editor checks.
 - `assets/progress-bar-template.svg`: editable neutral vector starting point.

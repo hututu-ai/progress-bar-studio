@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.5 - 2026-08-18
+
+### Changed
+
+- Reworked the creator experience into an enforced Step 1-8 conversation: one question, one decision, and 2 to 5 A/B/C choices per reply.
+- Made the first-run message a three-way starting choice for creators who already have an analysis video, need a 720p export hint, or want to preview the output first.
+- Separated the one creator-facing final file from internal project records, and delayed final delivery-folder reservation until the 15-second sample is approved.
+- Added explicit choice acknowledgement, plain-language state recap, `改一下`, and `返回上一步` behavior so a revision never restarts the project.
+
+### Added
+
+- Added `guided-conversation.md`, with required Chinese creator-facing cards, button/text fallback, natural-language mapping, and error-recovery paths.
+
 ## 0.2.4 - 2026-08-18
 
 ### Changed

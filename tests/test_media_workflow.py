@@ -19,6 +19,7 @@ PREFLIGHT = SCRIPTS / "preflight.py"
 ESTIMATOR = SCRIPTS / "estimate_export_size.py"
 PREPARE_DELIVERY = SCRIPTS / "prepare_delivery.py"
 PRESET_LIBRARY = SCRIPTS / "preset_library.py"
+GUIDED_CONVERSATION = REPOSITORY / "skill" / "progress-bar-studio" / "references" / "guided-conversation.md"
 PROBE_VIDEO = SCRIPTS / "probe_video.sh"
 VERIFY_ALPHA = SCRIPTS / "verify_alpha_mov.sh"
 
@@ -253,6 +254,30 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
         self.assertTrue((preset_path.parent / loaded_payload["character"]["asset"]).is_file())
         self.assertTrue((preset_path.parent / loaded_payload["style"]["reference"]).is_file())
 
+    def test_guided_conversation_requires_eight_single_choice_steps(self) -> None:
+        guide = GUIDED_CONVERSATION.read_text(encoding="utf-8")
+        self.assertIn("one decision per reply", guide)
+        self.assertIn("进度 X/8", guide)
+        for step in range(1, 9):
+            self.assertIn(f"Step {step}/8", guide)
+        self.assertIn("改一下", guide)
+        self.assertIn("返回上一步", guide)
+
+    def test_delivery_reservation_requires_sample_approval(self) -> None:
+        result = run(
+            sys.executable,
+            str(PREPARE_DELIVERY),
+            "--source-video",
+            str(self.wide_no_audio),
+            "--output-dir",
+            str(self.output_dir),
+            "--character-mode",
+            "none",
+            "--json",
+            expected=2,
+        )
+        self.assertIn("--sample-approved", result.stderr)
+
     def test_versioned_overlay_delivery_and_no_character_path(self) -> None:
         first = run(
             sys.executable,
@@ -263,6 +288,7 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
             str(self.output_dir),
             "--character-mode",
             "none",
+            "--sample-approved",
             "--json",
         )
         second = run(
@@ -274,6 +300,7 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
             str(self.output_dir),
             "--character-mode",
             "none",
+            "--sample-approved",
             "--json",
         )
         first_payload = json_output(first)
@@ -284,8 +311,9 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
         self.assertEqual(first_payload["characterOutputs"], [])
         self.assertNotIn("deliveryMode", first_payload)
         self.assertEqual(first_payload["sampleArtifacts"], ["sample_progress_bar.mov"])
-        self.assertIn("progress_bar.mov", first_payload["artifacts"])
-        self.assertNotIn("final_with_progress_bar.mp4", first_payload["artifacts"])
+        self.assertTrue(first_payload["sampleApproved"])
+        self.assertEqual(first_payload["creatorArtifacts"], ["progress_bar.mov"])
+        self.assertEqual(first_payload["projectRecords"], ["chapters.json", "style.json", "qc/"])
         self.assertEqual(first_payload["nextCheckpoint"], "combined-preview")
 
 
