@@ -41,10 +41,13 @@ jobs:
           if not skill.startswith("---\n"):
               raise SystemExit("SKILL.md must begin with YAML frontmatter")
           frontmatter = skill.split("---\n", 2)[1]
-          metadata = yaml.safe_load(frontmatter)
-          for key in ("name", "description", "compatibility"):
-              if not metadata.get(key):
+          frontmatter_data = yaml.safe_load(frontmatter)
+          for key in ("name", "description"):
+              if not frontmatter_data.get(key):
                   raise SystemExit(f"Missing required frontmatter field: {key}")
+          skill_metadata = frontmatter_data.get("metadata")
+          if not isinstance(skill_metadata, dict) or not skill_metadata.get("compatibility"):
+              raise SystemExit("Missing required frontmatter field: metadata.compatibility")
           PY
           sh -n skill/progress-bar-studio/scripts/*.sh
           python -m py_compile skill/progress-bar-studio/scripts/*.py
