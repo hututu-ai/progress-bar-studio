@@ -67,12 +67,38 @@ def save_preset(args: argparse.Namespace) -> dict:
             if args.style_reference
             else None
         )
+        placement = {
+            key: value
+            for key, value in {
+                "label": args.placement,
+                "x": args.position_x,
+                "y": args.position_y,
+                "overlayScale": args.overlay_scale,
+            }.items()
+            if value is not None
+        }
+        render = {
+            key: value
+            for key, value in {
+                "resolution": args.resolution,
+                "canvasWidth": args.canvas_width,
+                "canvasHeight": args.canvas_height,
+            }.items()
+            if value is not None
+        }
         preset = {
-            "schemaVersion": 1,
+            "schemaVersion": 2,
             "name": args.name,
             "character": {"mode": args.character_mode, "asset": character_asset},
-            "style": {"route": args.style, "reference": style_reference},
+            "style": {
+                "route": args.style,
+                "variant": args.style_variant,
+                "reference": style_reference,
+                "chapterCountPolicy": "content-adaptive",
+            },
             "palette": parse_palette(args.palette),
+            "render": render,
+            "placement": placement,
         }
         preset_path = preset_dir / "preset.json"
         preset_path.write_text(json.dumps(preset, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -81,7 +107,7 @@ def save_preset(args: argparse.Namespace) -> dict:
             (library / "default-preset.json").write_text(
                 json.dumps(
                     {
-                        "schemaVersion": 1,
+                        "schemaVersion": 2,
                         "preset": str(preset_path),
                         "name": args.name,
                     },
@@ -102,6 +128,8 @@ def save_preset(args: argparse.Namespace) -> dict:
         "characterMode": args.character_mode,
         "style": args.style,
         "palette": preset["palette"],
+        "render": preset["render"],
+        "placement": preset["placement"],
     }
 
 
@@ -113,7 +141,7 @@ def show_preset(path: Path) -> dict:
         preset = json.loads(preset_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise PresetError(f"Cannot read preset: {preset_path}") from exc
-    if preset.get("schemaVersion") != 1 or not isinstance(preset.get("name"), str):
+    if preset.get("schemaVersion") not in (1, 2) or not isinstance(preset.get("name"), str):
         raise PresetError(f"Unsupported preset format: {preset_path}")
     preset["preset"] = str(preset_path)
     return preset
@@ -123,14 +151,24 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Save or inspect reusable ElleFlow brand presets.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    save = subparsers.add_parser("save", help="Save one confirmed character, style, and palette choice.")
+    save = subparsers.add_parser(
+        "save", help="Save one confirmed character and complete visual configuration."
+    )
     save.add_argument("--name", required=True)
     save.add_argument("--library-dir", type=Path, required=True)
     save.add_argument("--character-mode", choices=("none", "single-pose", "walk-cycle"), required=True)
     save.add_argument("--character-image", type=Path)
     save.add_argument("--style", choices=("S1", "S2", "S3", "S4", "custom"), required=True)
+    save.add_argument("--style-variant")
     save.add_argument("--style-reference", type=Path)
     save.add_argument("--palette", action="append", default=[], metavar="KEY=#RRGGBB")
+    save.add_argument("--resolution", choices=("1080p", "2K", "4K"))
+    save.add_argument("--canvas-width", type=int)
+    save.add_argument("--canvas-height", type=int)
+    save.add_argument("--overlay-scale", type=float)
+    save.add_argument("--placement")
+    save.add_argument("--position-x", type=float)
+    save.add_argument("--position-y", type=float)
     save.add_argument("--set-default", action="store_true")
     save.add_argument("--json", action="store_true")
 

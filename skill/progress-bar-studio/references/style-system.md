@@ -4,8 +4,8 @@
 
 ### S1 Chapter capsules
 
-Show 4–7 rounded chapter pills below or inside a track. Highlight only the current
-chapter and move the uploaded character along the track. Best for semantic
+Show a content-adaptive number of rounded chapter pills below or inside a track.
+Highlight only the current chapter and move the uploaded character along the track. Best for semantic
 navigation and friendly personal-brand videos. Fixed character placement:
 `on-edge`, with the feet on the upper progress line.
 
@@ -103,7 +103,10 @@ character silhouette in generic catalogs.
 - Place the character according to the fixed S1–S4 mapping. Keep ears, hair,
   tail, and limbs inside the encoded
   canvas.
-- Use 4–7 chapters. Shorten labels before shrinking text.
+- For videos up to 3 minutes, normally use 3–5 visible chapters; allow 6–7 when
+  strong semantic turns and final-size readability justify them. Longer videos
+  may use more according to content density. Shorten labels or merge subordinate
+  nodes before shrinking text.
 - Test the smallest final display size, not only the 4K master.
 
 ## Track-fit calibration

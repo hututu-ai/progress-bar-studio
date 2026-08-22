@@ -17,8 +17,9 @@ frame only when the track, labels, or chapter state cannot be distinguished.
    milestone stops, inside-band travel, or text-only state change.
 3. Infer the visible foot or icon baseline and choose placement from the
    reference. Do not ask the user where the character should sit.
-4. Replace source labels with the approved semantic chapters. Re-space the
-   design for 4–7 labels and shorten labels before shrinking text.
+4. Replace source labels with the approved presentation chapters. Re-space the
+   design for the current content-adaptive count; shorten labels or merge
+   subordinate nodes before shrinking text.
 5. Apply the current-task character only when enabled. Remove or replace any
    character, logo, portrait, watermark, or brand mark contained in the source.
 6. Rebuild lines, pills, labels, dividers, and fills as vectors at final size.

@@ -51,8 +51,32 @@ the A/B/C choice; do not start a project.
 
 ## Step 1/8: Read video and confirm chapters
 
-First probe the uploaded analysis video and derive a chapter draft. Do not ask
-about character, color, resolution, or presets yet.
+Before chapter analysis, inspect the default preset. If a complete preset is
+available, this is the first Step 1 decision; it does not add a ninth step:
+
+```text
+进度 1/8｜要沿用上次方案吗？
+
+检测到上次已确认的方案：<角色与动画> + <精确样式> + <配色> + <大小与位置>。
+这次仍会按新视频内容重新划分章节。
+
+A. 整套沿用
+B. 沿用，但改其中一项
+C. 这次重新选择
+
+回复 A、B 或 C。
+```
+
+For `A`, record complete reuse and do not ask the same character, style, color,
+size, or placement questions later unless validation finds a real conflict. For
+`B`, ask one compact follow-up offering `角色 / 样式 / 颜色 / 大小和位置`, keep
+the unselected fields, and revisit only the selected field at its normal step.
+For `C`, use the ordinary flow. Older presets without size or placement may
+reuse their known fields, but missing fields must still be asked later.
+
+Then probe the uploaded analysis video and derive a chapter draft. Do not copy
+the preset's old chapter count. Do not ask any other visual question before the
+chapter card.
 
 ```text
 进度 1/8｜确认章节
@@ -110,8 +134,8 @@ B. 我想换一张图
 C. 不用角色了
 ```
 
-For `D`, show any available preset's name, role mode, style, and colors, then
-ask `A. 用这套预设` or `B. 这次自己选`.
+For `D`, show any available preset's name, character mode, exact style, colors,
+size, scale, and placement, then ask `A. 整套沿用` or `B. 这次自己选`.
 
 ## Step 3/8: Choose style
 
@@ -165,13 +189,16 @@ This is optional and must never block the current video.
 ```text
 进度 5/8｜下次要不要一键复用这套风格？
 
-会保存你刚刚确认的角色、样式和颜色；不会保存视频和章节。
+最终方案确认后，会保存角色、精确样式、颜色、大小和位置；不会保存视频和章节。
 
 A. 保存为我的 ElleFlow 预设
 B. 这次不用保存
 ```
 
-For `A`, ask only for a short preset name, then acknowledge the saved name.
+For `A`, ask only for a short preset name and record save intent. Write the
+complete preset after Step 7 confirms the final size and placement; do not add a
+new question then. If Step 1 already reused an unchanged saved preset, mark Step
+5 approved from that reuse decision and do not ask this card again.
 
 ## Step 6/8: Choose export
 
@@ -206,6 +233,12 @@ B. 我自己选文件夹
 Show the size range and available space after both values are known. Do not ask
 the creator to interpret bytes, codecs, or encoding settings.
 
+When Step 1 approved a complete preset containing resolution, scale, and
+placement, do not ask those fields again. Confirm timeline alignment and ask
+only for the new output folder. Re-run real-video collision checks before Step
+7; if the saved placement genuinely conflicts, explain the evidence and ask one
+placement repair question.
+
 ## Step 7/8: Review the complete design
 
 Show one real-video still with the approved chapters, character, style, and
@@ -215,7 +248,7 @@ colors. State the chosen items in human language.
 进度 7/8｜最后确认
 
 我会按这套方案制作：
-- 章节：3 段，已确认
+- 章节：<本次内容自适应段数>，已确认
 - 角色：小人走路
 - 样式：章节胶囊
 - 颜色：从视频提取的蓝绿色

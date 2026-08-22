@@ -226,12 +226,28 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
             str(character),
             "--style",
             "custom",
+            "--style-variant",
+            "white-card-two-level-capsules",
             "--style-reference",
             str(reference),
             "--palette",
             "primary=#E89AB3",
             "--palette",
             "text=#111111",
+            "--resolution",
+            "2K",
+            "--canvas-width",
+            "2560",
+            "--canvas-height",
+            "498",
+            "--overlay-scale",
+            "1.0",
+            "--placement",
+            "top",
+            "--position-x",
+            "0",
+            "--position-y",
+            "32",
             "--set-default",
             "--json",
         )
@@ -240,6 +256,8 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
         self.assertTrue(preset_path.is_file())
         self.assertTrue(Path(payload["defaultPreset"]).is_file())
         self.assertEqual(payload["palette"]["primary"], "#E89AB3")
+        self.assertEqual(payload["render"]["resolution"], "2K")
+        self.assertEqual(payload["placement"]["label"], "top")
 
         loaded = run(
             sys.executable,
@@ -251,6 +269,11 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
         )
         loaded_payload = json_output(loaded)
         self.assertEqual(loaded_payload["character"]["mode"], "walk-cycle")
+        self.assertEqual(loaded_payload["schemaVersion"], 2)
+        self.assertEqual(loaded_payload["style"]["variant"], "white-card-two-level-capsules")
+        self.assertEqual(loaded_payload["style"]["chapterCountPolicy"], "content-adaptive")
+        self.assertEqual(loaded_payload["render"]["canvasWidth"], 2560)
+        self.assertEqual(loaded_payload["placement"]["y"], 32.0)
         self.assertTrue((preset_path.parent / loaded_payload["character"]["asset"]).is_file())
         self.assertTrue((preset_path.parent / loaded_payload["style"]["reference"]).is_file())
 

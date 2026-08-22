@@ -15,6 +15,20 @@ After each choice, repeat the selected value in plain language and then show the
 next step. `改一下` and `返回上一步` must return to the smallest relevant
 decision. Never treat silence, an upload, or an ambiguous click as approval.
 
+### Returning-user fast path
+
+When a valid default preset exists, the first decision for the new video is a
+compact reuse question inside Step 1, before any new visual question. The
+summary must name the character mode, exact style variant, palette, size, scale,
+and placement. An explicit complete-reuse answer may pre-approve Steps 2, 3, 4,
+the already-saved Step 5 choice, and the reusable size/placement portion of Step
+6 after file and collision checks. Keep those decisions in the log with
+`approvalSource: step1-reuse-preset`; do not create redundant user stops.
+
+Step 1 still derives and confirms chapters for the new video. Output folder,
+real-video fit, combined preview, sample, and final render authorization are
+never inherited. A preset reuses visual grammar, not chapter count.
+
 ## Required decisions
 
 | Step | Approval needed | Evidence shown before approval | On revision |
@@ -49,6 +63,10 @@ video into equal lengths.
 The creator chooses `walk-cycle`, `single-pose`, `none`, or an approved preset.
 For a character route, preserve identity and show the prepared asset before
 continuing. For `none`, record the choice and proceed directly to style.
+Treat `none` as a render invariant: do not load a character into later style
+cards, combined previews, samples, transparent masters, or delivery packages.
+Inspect one preview frame and one decoded master frame before delivery to
+confirm no added character remains.
 
 ### 3. Style and color
 
@@ -59,10 +77,10 @@ party's treatment as the creator's brand.
 
 ### 4. Optional preset
 
-Saving is opt-in. Store only the approved character asset, style route, optional
-reference image, and palette. Never store source videos, chapter data, output
-folders, or editor-import claims. A future default is a suggestion, never a
-silent reuse action.
+Saving is opt-in. Store only the approved character asset, exact style variant,
+optional reference image, palette, size, scale, and placement. Never store
+source videos, chapter data, output folders, or editor-import claims. A future
+default is a suggestion, never a silent reuse action.
 
 ### 5. Transparent-overlay export
 

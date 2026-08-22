@@ -1,9 +1,9 @@
 ---
 name: progress-bar-studio
 description: "Create ElleFlow animated chapter progress bars for long or short videos, Vlogs, knowledge videos, and video series. Creators can upload a recommended 720p analysis copy to confirm chapters, choose a walking IP character or a plain bar through one clear Step 1-8 choice at a time, select a style and color, optionally save a reusable preset, and receive a high-resolution transparent ProRes 4444 MOV to align over their original video in an editor. Use for lazy, no-keyframe chapter progress-bar creation, character-led progress indicators, reusable creator SOP presets, transparent PNG/WebP frames, and ProRes 4444 MOV overlays."
-compatibility: "Requires local file access plus ffmpeg, ffprobe, and Python 3. Pillow is needed for four-frame character cycles. Transcription, image editing, and editor-import testing depend on the host."
 metadata:
-  version: "0.2.5"
+  version: "0.3.0"
+  compatibility: "Requires local file access plus ffmpeg, ffprobe, and Python 3. Pillow is needed for four-frame character cycles. Transcription, image editing, and editor-import testing depend on the host."
 ---
 
 # ElleFlow｜小人走路视频进度条动画
@@ -61,14 +61,21 @@ without platform-specific controls:
 The required card wording, natural-language mapping, revisions, and recovery
 paths are in [guided-conversation.md](references/guided-conversation.md).
 
+For a returning creator, inspect the default preset before asking any new
+visual questions. If it exists, make the first Step 1 decision a one-question
+offer to reuse the complete approved bundle: character, animation mode, exact
+style variant, palette, size, scale, and placement. Reuse never carries forward
+the old video's chapters, timing, source, output folder, or render approval.
+
 ## Creator-first order
 
 Follow this order. Do not move output folder, resolution, or file-size questions
 into the first creative conversation.
 
-1. **Read video**: accept or help the creator export a 720p analysis copy.
-   Probe it internally, derive an editable chapter draft, and show only the
-   chapter-confirmation card.
+1. **Read video**: accept or help the creator export a 720p analysis copy. When
+   a valid default preset exists, first ask whether to reuse its complete visual
+   bundle. Then probe it internally, derive an editable chapter draft, and show
+   the chapter-confirmation card.
 2. **Confirm chapters**: let the creator accept, edit, or reanalyse the draft
    before any visual choice.
 3. **Choose character**: offer walking character, light-motion character, plain
@@ -77,8 +84,9 @@ into the first creative conversation.
    reference route.
 5. **Choose color**: let the creator choose video-derived color, palette image,
    named color, or an ElleFlow recommendation.
-6. **Save preset**: offer an optional named preset only after character, style,
-   and color are approved.
+6. **Save preset**: offer an optional preset name after character, style, and
+   color are approved; write it only after the final design confirms size,
+   scale, and placement.
 7. **Choose transparent export**: confirm the original timeline still matches
    the analysis copy, then ask for resolution and output folder in separate
    choice cards. Detect the source orientation internally; do not make the
@@ -113,6 +121,12 @@ draft with real semantic turns, show it to the creator, and ask whether the
 chapter names and boundaries are correct. Never divide a video into equal
 durations.
 
+Detect semantic nodes first, then choose visible presentation chapters. For
+videos up to 3 minutes, normally use 3–5 chapters; use 6–7 only when the content
+has that many strong, distinct turns and the final labels remain readable.
+Longer videos may use more according to content density. Never reuse a saved
+preset's previous chapter count.
+
 Only when the source truly cannot be transcribed should you explain the
 limitation and request a timestamped chapter list. If the content depends on
 small on-screen text, slides, code, or tables that the analysis copy cannot
@@ -133,6 +147,11 @@ Offer exactly these paths:
 If the creator selects `none`, record the choice and continue directly to style.
 Do not show a content-free character approval card.
 
+Treat `none` as a render invariant. Do not load or pass any character asset into
+style cards, the combined preview, sample, transparent master, or delivery
+package. Before delivery, inspect at least one preview frame and one decoded
+master frame to confirm that no added character pixels remain.
+
 For a character path, read
 [character-preparation.md](references/character-preparation.md). Preserve the
 uploaded character's identity, colors, proportions, markings, clothing,
@@ -145,7 +164,8 @@ foot baseline, and multi-background edge check. Obtain explicit approval before
 using that character in a combined preview.
 
 Never silently reuse a character from another project. A saved preset is the
-only reuse route, and it must be shown and approved for the current video.
+only reuse route, and its complete contents must be shown and approved for the
+current video.
 
 ## Style and color decision
 
@@ -189,7 +209,8 @@ or proprietary color treatment as if it belongs to the creator.
 
 ## Reusable ElleFlow presets
 
-After the character, style, and palette are approved, ask:
+After the character, exact style variant, palette, size, scale, and placement
+are approved, ask:
 
 ```text
 要把这套角色、样式和颜色保存成下次可复用的 ElleFlow 预设吗？
@@ -197,14 +218,17 @@ After the character, style, and palette are approved, ask:
 
 On an explicit yes, ask for a preset name and whether it should be the suggested
 default. Use `scripts/preset_library.py` to save a self-contained local preset
-with copies of only the approved character and reference assets. It never
-overwrites an existing preset.
+with copies of only the approved character and reference assets plus the exact
+visual configuration. It never overwrites an existing preset.
 
-On a later project, inspect a supplied or discovered default preset first, show
-its character mode, style route, and palette, and ask whether to use it. The
-creator can reuse it, revise it for the current video, or decline it. A preset
-never carries forward source videos, chapters, output folders, file-size claims,
-or editor-import claims.
+On a later project, inspect a supplied or discovered default preset before the
+new video's chapter card. Show its character mode, exact style variant, palette,
+size, scale, and placement, then ask whether to reuse the complete bundle. The
+creator can reuse it, revise one field, or decline it. Complete reuse pre-approves
+the saved visual decisions after file and real-video collision checks, so do not
+ask the same character, style, color, size, or placement questions again. A
+preset never carries forward source videos, chapters or chapter count, output
+folders, file-size claims, or editor-import claims.
 
 ## Transparent-overlay delivery decision
 
@@ -298,7 +322,10 @@ Use a compact confirmation card for each risk-bearing choice. Include
 `understood`, `evidence`, `confirm`, `next`, and `revise`, then ask one short
 question. Record explicit choices in `decision-log.json`.
 
-Keep approved upstream choices when a creator changes one thing:
+Keep approved upstream choices when a creator changes one thing. A complete
+Step 1 preset-reuse answer may mark the corresponding later decisions approved
+with `approvalSource: step1-reuse-preset`; do not turn them into repeated user
+stops.
 
 | Changed choice | Keep | Revisit |
 | --- | --- | --- |

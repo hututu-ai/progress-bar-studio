@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.3.0 - 2026-08-22
+
+### Changed
+
+- Added a returning-creator fast path that offers complete reuse of the last
+  approved character, exact style variant, palette, size, scale, and placement
+  at the start of Step 1.
+- Made chapter count content-adaptive: videos up to three minutes normally use
+  3–5 presentation chapters, with 6–7 allowed for genuine semantic turns;
+  longer videos may use more when readability permits.
+- Separated raw semantic nodes from visible chapters and prohibited presets
+  from carrying forward a previous video's chapter count.
+- Made `no character` an invariant across catalogs, previews, samples, masters,
+  and delivery packages.
+
+### Added
+
+- Extended reusable preset schema to store exact style variant, resolution,
+  canvas dimensions, overlay scale, and placement while remaining compatible
+  with schema version 1.
+
 ## 0.2.5 - 2026-08-18
 
 ### Changed
