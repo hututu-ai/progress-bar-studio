@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.4.0 - 2026-08-23
+
+### Changed
+
+- Replaced the duplicate visible Step 1 reuse question with an unnumbered
+  `快捷设置` pre-step, so returning creators see a clear eight-step journey.
+- Added fast mode: when a creator explicitly supplies reusable visual choices,
+  ElleFlow skips redundant visual cards while retaining chapter, design, sample,
+  and full-export approval.
+- Moved permanent preset writes until after the 15-second sample passes and the
+  creator authorizes final export. Earlier Step 5 now records save intent only.
+- Kept output resolution and canvas project-specific. They are no longer reused
+  from a visual preset.
+
+### Added
+
+- Added the creator-facing distinction between a one-PNG static character pose
+  and a four-frame transparent walk-cycle generated from one uploaded IP image.
+- Extended preset schema to v3. Walk-cycle presets now require and retain the
+  four approved frames, sprite sheet, preview, and cycle manifest as one bundle.
+- Added regression coverage for complete walk-cycle preset save/reuse and for
+  rejecting a single-image file masquerading as a walk cycle.
+
 ## 0.3.0 - 2026-08-22
 
 ### Changed
@@ -17,9 +40,8 @@
 
 ### Added
 
-- Extended reusable preset schema to store exact style variant, resolution,
-  canvas dimensions, overlay scale, and placement while remaining compatible
-  with schema version 1.
+- Extended reusable preset schema to store exact style variant, overlay scale,
+  and placement while remaining compatible with schema version 1.
 
 ## 0.2.5 - 2026-08-18
 

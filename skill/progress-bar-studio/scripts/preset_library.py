@@ -42,6 +42,37 @@ def copy_asset(source: Path, assets_dir: Path, stem: str) -> str:
     return str(destination.relative_to(assets_dir.parent))
 
 
+def copy_cycle_bundle(source: Path, assets_dir: Path) -> dict[str, str | list[str] | float]:
+    """Copy an approved four-frame cycle and its manifest as one reusable asset."""
+    source = source.expanduser().resolve()
+    if not source.is_dir():
+        raise PresetError(f"Walk-cycle directory not found: {source}")
+
+    manifests = sorted(source.glob("*-cycle.json"))
+    if len(manifests) != 1:
+        raise PresetError("Walk-cycle directory must contain exactly one *-cycle.json manifest.")
+    try:
+        manifest = json.loads(manifests[0].read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise PresetError(f"Cannot read walk-cycle manifest: {manifests[0]}") from exc
+
+    frames = manifest.get("frames")
+    if manifest.get("frameCount") != 4 or not isinstance(frames, list) or len(frames) != 4:
+        raise PresetError("Walk-cycle manifest must describe exactly four frames.")
+    required = [*frames, manifest.get("spriteSheet"), manifest.get("preview")]
+    if any(not isinstance(item, str) or not (source / item).is_file() for item in required):
+        raise PresetError("Walk-cycle bundle is missing an approved frame, sprite sheet, or preview.")
+
+    destination = assets_dir / "walk-cycle"
+    shutil.copytree(source, destination)
+    return {
+        "manifest": str((destination / manifests[0].name).relative_to(assets_dir.parent)),
+        "frames": [str((destination / frame).relative_to(assets_dir.parent)) for frame in frames],
+        "fps": manifest.get("fps"),
+        "playbackOrder": manifest.get("playbackOrder"),
+    }
+
+
 def save_preset(args: argparse.Namespace) -> dict:
     library = args.library_dir.expanduser().resolve()
     preset_dir = library / slugify(args.name)
@@ -49,8 +80,18 @@ def save_preset(args: argparse.Namespace) -> dict:
         raise PresetError(
             f"Preset already exists: {preset_dir}. Choose a different name; existing presets are never overwritten."
         )
-    if args.character_mode == "none" and args.character_image:
-        raise PresetError("A character image requires single-pose or walk-cycle mode.")
+    if args.character_mode == "none" and (args.character_image or args.character_cycle_dir):
+        raise PresetError("No-character mode cannot save character assets.")
+    if args.character_mode == "single-pose" and not args.character_image:
+        raise PresetError("Single-pose mode requires --character-image.")
+    if args.character_mode == "walk-cycle" and not args.character_cycle_dir:
+        raise PresetError("Walk-cycle mode requires --character-cycle-dir with four approved transparent frames.")
+    if args.character_mode == "walk-cycle" and args.character_image:
+        raise PresetError("Walk-cycle mode saves the approved cycle directory, not one character image.")
+    if args.resolution or args.canvas_width or args.canvas_height:
+        raise PresetError(
+            "Output resolution and canvas belong to the current delivery; choose them again for each video."
+        )
     if args.style == "custom" and not args.style_reference:
         raise PresetError("Custom style requires --style-reference.")
 
@@ -60,6 +101,11 @@ def save_preset(args: argparse.Namespace) -> dict:
         character_asset = (
             copy_asset(args.character_image, assets_dir, "character")
             if args.character_image
+            else None
+        )
+        cycle_bundle = (
+            copy_cycle_bundle(args.character_cycle_dir, assets_dir)
+            if args.character_cycle_dir
             else None
         )
         style_reference = (
@@ -77,19 +123,14 @@ def save_preset(args: argparse.Namespace) -> dict:
             }.items()
             if value is not None
         }
-        render = {
-            key: value
-            for key, value in {
-                "resolution": args.resolution,
-                "canvasWidth": args.canvas_width,
-                "canvasHeight": args.canvas_height,
-            }.items()
-            if value is not None
-        }
         preset = {
-            "schemaVersion": 2,
+            "schemaVersion": 3,
             "name": args.name,
-            "character": {"mode": args.character_mode, "asset": character_asset},
+            "character": {
+                "mode": args.character_mode,
+                "asset": character_asset,
+                "cycle": cycle_bundle,
+            },
             "style": {
                 "route": args.style,
                 "variant": args.style_variant,
@@ -97,7 +138,6 @@ def save_preset(args: argparse.Namespace) -> dict:
                 "chapterCountPolicy": "content-adaptive",
             },
             "palette": parse_palette(args.palette),
-            "render": render,
             "placement": placement,
         }
         preset_path = preset_dir / "preset.json"
@@ -128,7 +168,6 @@ def save_preset(args: argparse.Namespace) -> dict:
         "characterMode": args.character_mode,
         "style": args.style,
         "palette": preset["palette"],
-        "render": preset["render"],
         "placement": preset["placement"],
     }
 
@@ -141,7 +180,7 @@ def show_preset(path: Path) -> dict:
         preset = json.loads(preset_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise PresetError(f"Cannot read preset: {preset_path}") from exc
-    if preset.get("schemaVersion") not in (1, 2) or not isinstance(preset.get("name"), str):
+    if preset.get("schemaVersion") not in (1, 2, 3) or not isinstance(preset.get("name"), str):
         raise PresetError(f"Unsupported preset format: {preset_path}")
     preset["preset"] = str(preset_path)
     return preset
@@ -158,6 +197,11 @@ def parse_args() -> argparse.Namespace:
     save.add_argument("--library-dir", type=Path, required=True)
     save.add_argument("--character-mode", choices=("none", "single-pose", "walk-cycle"), required=True)
     save.add_argument("--character-image", type=Path)
+    save.add_argument(
+        "--character-cycle-dir",
+        type=Path,
+        help="Directory containing an approved four-frame cycle, manifest, sprite sheet, and preview.",
+    )
     save.add_argument("--style", choices=("S1", "S2", "S3", "S4", "custom"), required=True)
     save.add_argument("--style-variant")
     save.add_argument("--style-reference", type=Path)

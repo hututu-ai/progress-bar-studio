@@ -206,11 +206,31 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
         result = run(str(VERIFY_ALPHA), str(transparent))
         self.assertIn("Alpha verification passed", result.stdout)
 
-    def test_saved_default_preset_copies_reusable_assets(self) -> None:
-        character = self.root / "character.png"
+    def test_saved_default_preset_copies_complete_walk_cycle_bundle(self) -> None:
         reference = self.root / "reference.png"
-        character.write_bytes(b"character asset")
         reference.write_bytes(b"style asset")
+        cycle_dir = self.root / "approved-walk-cycle"
+        cycle_dir.mkdir()
+        frames = []
+        for index in range(1, 5):
+            frame = cycle_dir / f"character-walk-frame-{index:02d}.png"
+            frame.write_bytes(b"transparent frame")
+            frames.append(frame.name)
+        (cycle_dir / "character-walk-spritesheet.png").write_bytes(b"sprite sheet")
+        (cycle_dir / "character-walk-preview.webp").write_bytes(b"preview")
+        (cycle_dir / "character-walk-cycle.json").write_text(
+            json.dumps(
+                {
+                    "frameCount": 4,
+                    "frames": frames,
+                    "spriteSheet": "character-walk-spritesheet.png",
+                    "preview": "character-walk-preview.webp",
+                    "fps": 8,
+                    "playbackOrder": [1, 2, 3, 4],
+                }
+            ),
+            encoding="utf-8",
+        )
         library = self.root / "preset-library"
         result = run(
             sys.executable,
@@ -222,8 +242,8 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
             str(library),
             "--character-mode",
             "walk-cycle",
-            "--character-image",
-            str(character),
+            "--character-cycle-dir",
+            str(cycle_dir),
             "--style",
             "custom",
             "--style-variant",
@@ -234,12 +254,6 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
             "primary=#E89AB3",
             "--palette",
             "text=#111111",
-            "--resolution",
-            "2K",
-            "--canvas-width",
-            "2560",
-            "--canvas-height",
-            "498",
             "--overlay-scale",
             "1.0",
             "--placement",
@@ -256,7 +270,6 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
         self.assertTrue(preset_path.is_file())
         self.assertTrue(Path(payload["defaultPreset"]).is_file())
         self.assertEqual(payload["palette"]["primary"], "#E89AB3")
-        self.assertEqual(payload["render"]["resolution"], "2K")
         self.assertEqual(payload["placement"]["label"], "top")
 
         loaded = run(
@@ -269,18 +282,45 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
         )
         loaded_payload = json_output(loaded)
         self.assertEqual(loaded_payload["character"]["mode"], "walk-cycle")
-        self.assertEqual(loaded_payload["schemaVersion"], 2)
+        self.assertEqual(loaded_payload["schemaVersion"], 3)
         self.assertEqual(loaded_payload["style"]["variant"], "white-card-two-level-capsules")
         self.assertEqual(loaded_payload["style"]["chapterCountPolicy"], "content-adaptive")
-        self.assertEqual(loaded_payload["render"]["canvasWidth"], 2560)
         self.assertEqual(loaded_payload["placement"]["y"], 32.0)
-        self.assertTrue((preset_path.parent / loaded_payload["character"]["asset"]).is_file())
+        cycle = loaded_payload["character"]["cycle"]
+        self.assertEqual(len(cycle["frames"]), 4)
+        self.assertEqual(cycle["playbackOrder"], [1, 2, 3, 4])
+        self.assertTrue((preset_path.parent / cycle["manifest"]).is_file())
+        self.assertTrue(all((preset_path.parent / frame).is_file() for frame in cycle["frames"]))
         self.assertTrue((preset_path.parent / loaded_payload["style"]["reference"]).is_file())
+
+    def test_walk_cycle_preset_rejects_single_character_file(self) -> None:
+        character = self.root / "character.png"
+        character.write_bytes(b"character asset")
+        result = run(
+            sys.executable,
+            str(PRESET_LIBRARY),
+            "save",
+            "--name",
+            "Incomplete Walk Cycle",
+            "--library-dir",
+            str(self.root / "preset-library"),
+            "--character-mode",
+            "walk-cycle",
+            "--character-image",
+            str(character),
+            "--style",
+            "S1",
+            expected=2,
+        )
+        self.assertIn("requires --character-cycle-dir", result.stderr)
 
     def test_guided_conversation_requires_eight_single_choice_steps(self) -> None:
         guide = GUIDED_CONVERSATION.read_text(encoding="utf-8")
         self.assertIn("one decision per reply", guide)
         self.assertIn("进度 X/8", guide)
+        self.assertIn("快捷设置", guide)
+        self.assertIn("Fast mode", guide)
+        self.assertIn("四帧透明步态", guide)
         for step in range(1, 9):
             self.assertIn(f"Step {step}/8", guide)
         self.assertIn("改一下", guide)

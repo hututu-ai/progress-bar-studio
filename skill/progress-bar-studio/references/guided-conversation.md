@@ -7,7 +7,7 @@ it without making them remember a workflow.
 ## Non-negotiable interaction rules
 
 1. Run exactly one decision per reply. Never ask about a later step early.
-2. Start every decision with `进度 X/8`.
+2. Start every numbered decision with `进度 X/8`. A returning-user `快捷设置` check comes before Step 1 and is not a ninth step.
 3. Use a title, at most two short explanatory sentences, then 2 to 5 numbered or
    lettered choices. If the host supports buttons, render the same choices as
    buttons. If not, the creator can reply with a number, letter, or natural
@@ -49,13 +49,13 @@ For `C`, show the style catalog and explain that the final item is a transparent
 progress bar placed over the creator's original editing project. Then return to
 the A/B/C choice; do not start a project.
 
-## Step 1/8: Read video and confirm chapters
+## 快捷设置：沿用已验证方案（仅返回用户）
 
-Before chapter analysis, inspect the default preset. If a complete preset is
-available, this is the first Step 1 decision; it does not add a ninth step:
+Before chapter analysis, inspect the default preset. If a complete verified
+preset is available, ask this unnumbered check; it does not add a ninth step:
 
 ```text
-进度 1/8｜要沿用上次方案吗？
+快捷设置｜要沿用上次方案吗？
 
 检测到上次已确认的方案：<角色与动画> + <精确样式> + <配色> + <大小与位置>。
 这次仍会按新视频内容重新划分章节。
@@ -77,6 +77,8 @@ reuse their known fields, but missing fields must still be asked later.
 Then probe the uploaded analysis video and derive a chapter draft. Do not copy
 the preset's old chapter count. Do not ask any other visual question before the
 chapter card.
+
+## Step 1/8: Read video and confirm chapters
 
 ```text
 进度 1/8｜确认章节
@@ -114,8 +116,8 @@ C. 先按现在的章节继续
 
 角色会沿着进度条推进；不选角色也能做一条干净的章节条。
 
-A. 小人走路：上传一张 IP 图
-B. 静态小人：上传一张 IP 图，轻微动起来
+A. 小人走路：上传一张 IP 图，自动生成四帧透明步态
+B. 静态小人：上传一张 IP 图，自动生成一张透明姿态
 C. 不要角色，只做进度条
 D. 用我的 ElleFlow 预设
 
@@ -127,7 +129,7 @@ For `A` or `B`, ask only for the IP image, prepare it, and show a result card:
 ```text
 进度 2/8｜确认角色
 
-我已经按你的原图做好角色，颜色、服装和轮廓都保留了。
+我已经按你的原图做好角色，颜色、服装和轮廓都保留了。走路版会给你看四帧循环；静态版只确认这一张透明姿态。
 
 A. 这个角色可以
 B. 我想换一张图
@@ -189,16 +191,17 @@ This is optional and must never block the current video.
 ```text
 进度 5/8｜下次要不要一键复用这套风格？
 
-最终方案确认后，会保存角色、精确样式、颜色、大小和位置；不会保存视频和章节。
+样片通过、完整进度条开始导出后，会保存角色、精确样式、颜色、大小和位置；不会保存视频和章节。
 
 A. 保存为我的 ElleFlow 预设
 B. 这次不用保存
 ```
 
 For `A`, ask only for a short preset name and record save intent. Write the
-complete preset after Step 7 confirms the final size and placement; do not add a
-new question then. If Step 1 already reused an unchanged saved preset, mark Step
-5 approved from that reuse decision and do not ask this card again.
+complete `verified` preset only after Step 8 sample approval and final-export
+authorization; do not add a new question then. If the quick-setting check already
+reused an unchanged saved preset, mark Step 5 approved from that reuse decision
+and do not ask this card again.
 
 ## Step 6/8: Choose export
 
@@ -233,11 +236,10 @@ B. 我自己选文件夹
 Show the size range and available space after both values are known. Do not ask
 the creator to interpret bytes, codecs, or encoding settings.
 
-When Step 1 approved a complete preset containing resolution, scale, and
-placement, do not ask those fields again. Confirm timeline alignment and ask
-only for the new output folder. Re-run real-video collision checks before Step
-7; if the saved placement genuinely conflicts, explain the evidence and ask one
-placement repair question.
+When the quick-setting check approved a complete preset, keep its visual scale
+and placement. Still ask for this project's output resolution and destination:
+they affect delivery size, not the reusable visual style. Confirm timeline
+alignment before Step 7.
 
 ## Step 7/8: Review the complete design
 
@@ -282,6 +284,19 @@ For `A`, export the final `progress_bar.mov`, validate it, and report the plain
 result first: file name, save location, chosen resolution, and how to place it
 at the beginning of the original project. Put technical validation details under
 an optional `查看技术检查` disclosure when the host supports it.
+
+If Step 5 recorded save intent, save the approved static pose or complete
+four-frame cycle bundle now as a `verified` preset, then report its name. Never
+save a rejected or unreviewed sample as the default preset.
+
+## Fast mode
+
+Use fast mode when a returning creator chooses complete reuse, or when the
+creator explicitly supplies a usable video plus all visual choices in one
+message, for example `S1、粉色、小怪走路、2K、沿用上次大小`. Do not replay
+already-specified visual cards. Still require the chapter confirmation, final
+design approval, and sample approval before the full render. Keep one decision
+per reply; fast mode removes redundant stops, not evidence or consent.
 
 ## Natural-language and error handling
 

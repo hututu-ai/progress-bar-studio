@@ -1,8 +1,8 @@
 ---
 name: progress-bar-studio
-description: "Create ElleFlow animated chapter progress bars for long or short videos, Vlogs, knowledge videos, and video series. Creators can upload a recommended 720p analysis copy to confirm chapters, choose a walking IP character or a plain bar through one clear Step 1-8 choice at a time, select a style and color, optionally save a reusable preset, and receive a high-resolution transparent ProRes 4444 MOV to align over their original video in an editor. Use for lazy, no-keyframe chapter progress-bar creation, character-led progress indicators, reusable creator SOP presets, transparent PNG/WebP frames, and ProRes 4444 MOV overlays."
+description: "Create ElleFlow animated chapter progress bars for long or short videos, Vlogs, knowledge videos, and video series. Creators can upload a recommended 720p analysis copy to confirm chapters, turn one uploaded IP image into either one transparent static pose or an approved four-frame transparent walk cycle, choose a style and color, optionally save a reusable preset, and receive a high-resolution transparent ProRes 4444 MOV for their editor timeline. Use for lazy, no-keyframe chapter progress-bar creation, character-led progress indicators, reusable creator SOP presets, transparent PNG/WebP frames, and ProRes 4444 MOV overlays."
 metadata:
-  version: "0.3.0"
+  version: "0.4.0"
   compatibility: "Requires local file access plus ffmpeg, ffprobe, and Python 3. Pillow is needed for four-frame character cycles. Transcription, image editing, and editor-import testing depend on the host."
 ---
 
@@ -47,7 +47,7 @@ details out of the opening response unless the creator asks for them.
 The host may render buttons, menus, or plain text, but the conversation must work
 without platform-specific controls:
 
-- show one decision per reply, headed `进度 X/8`;
+- show one decision per reply, headed `进度 X/8`; a returning-user `快捷设置` check is a pre-step and does not consume a numbered step;
 - give a short title, no more than two explanatory sentences, and 2 to 5
   lettered or numbered choices;
 - render the same choices as buttons when the host supports buttons; otherwise
@@ -62,7 +62,7 @@ The required card wording, natural-language mapping, revisions, and recovery
 paths are in [guided-conversation.md](references/guided-conversation.md).
 
 For a returning creator, inspect the default preset before asking any new
-visual questions. If it exists, make the first Step 1 decision a one-question
+visual questions. If it exists, make a pre-step `快捷设置` decision, then
 offer to reuse the complete approved bundle: character, animation mode, exact
 style variant, palette, size, scale, and placement. Reuse never carries forward
 the old video's chapters, timing, source, output folder, or render approval.
@@ -73,7 +73,7 @@ Follow this order. Do not move output folder, resolution, or file-size questions
 into the first creative conversation.
 
 1. **Read video**: accept or help the creator export a 720p analysis copy. When
-   a valid default preset exists, first ask whether to reuse its complete visual
+   a valid default preset exists, first use the unnumbered quick setting to ask whether to reuse its complete visual
    bundle. Then probe it internally, derive an editable chapter draft, and show
    the chapter-confirmation card.
 2. **Confirm chapters**: let the creator accept, edit, or reanalyse the draft
@@ -85,8 +85,8 @@ into the first creative conversation.
 5. **Choose color**: let the creator choose video-derived color, palette image,
    named color, or an ElleFlow recommendation.
 6. **Save preset**: offer an optional preset name after character, style, and
-   color are approved; write it only after the final design confirms size,
-   scale, and placement.
+   color are approved; record intent only. Write a `verified` preset only after
+   the sample has passed and the creator authorizes the final master.
 7. **Choose transparent export**: confirm the original timeline still matches
    the analysis copy, then ask for resolution and output folder in separate
    choice cards. Detect the source orientation internally; do not make the
@@ -141,8 +141,10 @@ the creator has confirmed or revised the chapter draft.
 Offer exactly these paths:
 
 - `none`: a clean progress bar with no character;
-- `single-pose`: one explicitly approved character PNG with light motion;
-- `walk-cycle`: an explicitly approved four-frame walking character.
+- `single-pose`: one explicitly approved transparent PNG; use it only for a
+  static/sticker-style role or restrained light motion;
+- `walk-cycle`: an explicitly approved set of four transparent walking PNGs,
+  plus the sprite sheet and cycle manifest that make the motion reusable.
 
 If the creator selects `none`, record the choice and continue directly to style.
 Do not show a content-free character approval card.
@@ -158,10 +160,12 @@ uploaded character's identity, colors, proportions, markings, clothing,
 accessories, outline, and texture. Use image editing with the uploaded source as
 the identity reference. Reject any result that redesigns the IP.
 
-For a four-frame cycle, create one aligned sprite sheet, prepare real RGBA PNGs,
-and split it with `scripts/split_walk_cycle.py`. Show the source, output, loop,
-foot baseline, and multi-background edge check. Obtain explicit approval before
-using that character in a combined preview.
+For a four-frame cycle, when the host offers an image-editing model, turn the
+creator's one uploaded IP image into one aligned sprite sheet, prepare real RGBA
+PNGs, and split it with `scripts/split_walk_cycle.py`. When the creator asks for
+a static role, generate and approve only one transparent pose instead. Show the
+source, output, loop where applicable, foot baseline, and multi-background edge
+check. Obtain explicit approval before using that character in a combined preview.
 
 Never silently reuse a character from another project. A saved preset is the
 only reuse route, and its complete contents must be shown and approved for the
@@ -217,9 +221,11 @@ are approved, ask:
 ```
 
 On an explicit yes, ask for a preset name and whether it should be the suggested
-default. Use `scripts/preset_library.py` to save a self-contained local preset
-with copies of only the approved character and reference assets plus the exact
-visual configuration. It never overwrites an existing preset.
+default. Record this save intent. Only after the sample has passed and the
+creator authorizes final export, use `scripts/preset_library.py` to save a
+`verified` self-contained local preset with copies of the approved static pose
+or the complete four-frame cycle bundle, reference assets, and visual
+configuration. It never overwrites an existing preset.
 
 On a later project, inspect a supplied or discovered default preset before the
 new video's chapter card. Show its character mode, exact style variant, palette,
@@ -236,8 +242,8 @@ Only after creative choices are approved, ask for the output resolution and
 output folder in separate choice cards. Detect the analysis video's orientation
 and canvas ratio internally; do not ask a novice to calculate or type it. The default and only standard final delivery is a transparent
 progress-bar MOV that the creator places over the original high-resolution video
-in an editor. Do not offer to re-encode the creator's full video or claim to
-deliver a finished composited MP4.
+in an editor. Do not composite, re-encode, or claim to deliver the creator's
+finished full video.
 
 Confirm that the creator will use the same final timeline as the analysis copy:
 

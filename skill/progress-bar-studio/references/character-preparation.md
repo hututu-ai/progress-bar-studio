@@ -15,9 +15,11 @@ user should not need to redraw the pose or remove the background manually.
 
 ## Create the walking pose
 
-When the source is static and the selected progress style uses a moving
-character, automatically create a walking or light-running version before
-background extraction.
+When the source is static and the creator selects `walk-cycle`, automatically
+turn the uploaded IP image into a four-frame walking or light-running version
+before background extraction. When the creator selects `single-pose`, generate
+only one transparent full-body pose; do not spend image-generation work on a
+walk cycle that will not be used.
 
 - Default to a full-body, three-quarter side view facing right.
 - Use a readable locomotion silhouette: one leg forward, one leg back, opposing
@@ -26,11 +28,10 @@ background extraction.
   thickness, texture, and overall proportions.
 - Change a closed-eye, yawning, sitting, or front-facing source into a clear,
   awake, friendly walking expression without redesigning the IP.
-- Use the smallest reliable deliverable first: one approved hero walking pose
-  plus a restrained bob animation.
-- Offer a real walk cycle after the hero pose is approved. When the user
-  explicitly requests frame-by-frame walking, go directly to a cycle and
-  default to four frames.
+- For `single-pose`, use one approved hero pose with no frame-by-frame walk
+  requirement.
+- For `walk-cycle`, go directly to an aligned four-frame cycle. The creator
+  should not need to choose a frame count.
 - Generate against a flat chroma-key color that is absent from the character,
   then build and verify the Alpha channel separately.
 - Show the source and generated pose side by side. If any identity anchor

@@ -11,14 +11,17 @@ matching card from `guided-conversation.md`, headed `进度 X/8`, with 2 to 5
 choices. A host may render buttons, but a letter, number, or unambiguous natural-
 language answer must work everywhere.
 
+The returning-user `快捷设置` card is an unnumbered pre-step. It never creates a
+second visible `进度 1/8` card.
+
 After each choice, repeat the selected value in plain language and then show the
 next step. `改一下` and `返回上一步` must return to the smallest relevant
 decision. Never treat silence, an upload, or an ambiguous click as approval.
 
 ### Returning-user fast path
 
-When a valid default preset exists, the first decision for the new video is a
-compact reuse question inside Step 1, before any new visual question. The
+When a valid default preset exists, the first decision for the new video is an
+unnumbered compact reuse question before Step 1 and before any new visual question. The
 summary must name the character mode, exact style variant, palette, size, scale,
 and placement. An explicit complete-reuse answer may pre-approve Steps 2, 3, 4,
 the already-saved Step 5 choice, and the reusable size/placement portion of Step
@@ -26,8 +29,9 @@ the already-saved Step 5 choice, and the reusable size/placement portion of Step
 `approvalSource: step1-reuse-preset`; do not create redundant user stops.
 
 Step 1 still derives and confirms chapters for the new video. Output folder,
-real-video fit, combined preview, sample, and final render authorization are
-never inherited. A preset reuses visual grammar, not chapter count.
+output resolution, combined preview, sample, and final render authorization are
+never inherited. A preset reuses visual grammar, not chapter count or delivery
+size.
 
 ## Required decisions
 
@@ -37,7 +41,7 @@ never inherited. A preset reuses visual grammar, not chapter count.
 | 2. Character | walking, static, plain, or preset route | source/result, edge, baseline, and loop evidence where relevant | rebuild character and later visual work |
 | 3. Style | S1-S4 or custom-reference route | visual comparison or adapted reference preview | rebuild later visual work |
 | 4. Color | approved palette | no more than four named swatches | rebuild later visual work |
-| 5. Preset | save or do not save | exact character, style, and palette summary | affects only future reuse |
+| 5. Preset | save intent or do not save | exact character, style, and palette summary | save only after Step 8 passes |
 | 6. Export | resolution and destination | original-timeline alignment confirmation, estimated size, available space | rerun only export planning |
 | 7. Design | complete visual design | real-video still with chapters, role, style, and colors | return to the changed creative step |
 | 8. Sample | final export permission | 15-second transparent sample across a chapter boundary | rerun sample and final export only |
@@ -61,7 +65,10 @@ video into equal lengths.
 ### 2. Character
 
 The creator chooses `walk-cycle`, `single-pose`, `none`, or an approved preset.
-For a character route, preserve identity and show the prepared asset before
+For `walk-cycle`, turn one uploaded IP image into four approved transparent
+walking frames and retain the sprite sheet, cycle manifest, frame order, and
+foot baseline. For `single-pose`, prepare one approved transparent static pose.
+For either character route, preserve identity and show the prepared asset before
 continuing. For `none`, record the choice and proceed directly to style.
 Treat `none` as a render invariant: do not load a character into later style
 cards, combined previews, samples, transparent masters, or delivery packages.
@@ -77,10 +84,11 @@ party's treatment as the creator's brand.
 
 ### 4. Optional preset
 
-Saving is opt-in. Store only the approved character asset, exact style variant,
-optional reference image, palette, size, scale, and placement. Never store
-source videos, chapter data, output folders, or editor-import claims. A future
-default is a suggestion, never a silent reuse action.
+Saving is opt-in. Record intent at Step 5, then store only the sample-approved
+character asset or complete walk-cycle bundle, exact style variant, optional
+reference image, palette, size, scale, and placement after Step 8. Never store
+source videos, chapter data, output folders, output resolution, or editor-import
+claims. A future default is a suggestion, never a silent reuse action.
 
 ### 5. Transparent-overlay export
 
