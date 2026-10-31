@@ -1,312 +1,76 @@
-# Guided creator conversation
-
-Use this reference for every creator-facing ElleFlow conversation. The goal is
-not to describe the workflow; it is to move one non-technical creator through
-it without making them remember a workflow.
-
-## Non-negotiable interaction rules
-
-1. Run exactly one decision per reply. Never ask about a later step early.
-2. Start every numbered decision with `进度 X/8`. A returning-user `快捷设置` check comes before Step 1 and is not a ninth step.
-3. Use a title, at most two short explanatory sentences, then 2 to 5 numbered or
-   lettered choices. If the host supports buttons, render the same choices as
-   buttons. If not, the creator can reply with a number, letter, or natural
-   language.
-4. After every answer, acknowledge the chosen value in plain language before
-   moving to the next decision.
-5. Always offer `改一下` / `返回上一步` after a choice has been recorded. Never
-   make the creator restart because one answer changed.
-6. Do not expose Alpha, ProRes, codecs, pixels, manifests, QC, or file paths in
-   a creator-facing card unless asked.
-7. Use the creator's language. The Chinese cards below are the required default
-   for Chinese creators.
-
-## Starting without a video
-
-When the Skill is opened without a usable video, show this one choice only:
-
-```text
-ElleFlow｜小人走路视频进度条动画
-
-先选你现在的情况：
-
-A. 我已经有一份 720p 分析版，直接上传
-B. 我有剪映工程，但不知道怎样导出分析版
-C. 我想先看看成品会是什么样
-
-回复 A、B 或 C 就行。
-```
-
-For `A`, ask the creator to upload the video. For `B`, give only this concise
-instruction, then ask them to upload it:
-
-```text
-在剪映导出一份 720p 视频就行。它只用来识别内容和做章节；你的高清原片继续留在原工程里。
-导出时不要再裁剪、变速或改画面比例。准备好后把这份视频拖进来。
-```
-
-For `C`, show the style catalog and explain that the final item is a transparent
-progress bar placed over the creator's original editing project. Then return to
-the A/B/C choice; do not start a project.
-
-## 快捷设置：沿用已验证方案（仅返回用户）
-
-Before chapter analysis, inspect the default preset. If a complete verified
-preset is available, ask this unnumbered check; it does not add a ninth step:
-
-```text
-快捷设置｜要沿用上次方案吗？
-
-检测到上次已确认的方案：<角色与动画> + <精确样式> + <配色> + <大小与位置>。
-这次仍会按新视频内容重新划分章节。
-
-A. 整套沿用
-B. 沿用，但改其中一项
-C. 这次重新选择
-
-回复 A、B 或 C。
-```
-
-For `A`, record complete reuse and do not ask the same character, style, color,
-size, or placement questions later unless validation finds a real conflict. For
-`B`, ask one compact follow-up offering `角色 / 样式 / 颜色 / 大小和位置`, keep
-the unselected fields, and revisit only the selected field at its normal step.
-For `C`, use the ordinary flow. Older presets without size or placement may
-reuse their known fields, but missing fields must still be asked later.
-
-Then probe the uploaded analysis video and derive a chapter draft. Do not copy
-the preset's old chapter count. Do not ask any other visual question before the
-chapter card.
-
-## Step 1/8: Read video and confirm chapters
-
-```text
-进度 1/8｜确认章节
-
-我从这条视频里整理出以下章节：
-1. 00:00 开场
-2. 00:28 方法一
-3. 01:10 总结
-
-A. 章节没问题，继续
-B. 我想改章节名称或时间点
-C. 重新分析一遍
-
-回复 A、B 或 C。
-```
-
-For `B`, ask the creator to send only the changed lines in the format
-`00:28 新章节名`. Re-display the revised chapter list and repeat this same
-confirmation. For `C`, explain what will be rechecked, rerun analysis, and show
-the new draft. If transcription or small on-screen text is unreliable, explain
-only the relevant limitation and offer one choice:
-
-```text
-这段画面里的文字太小，章节名称可能不够准。
-
-A. 发一张这段的清晰截图
-B. 直接告诉我这一段叫什么
-C. 先按现在的章节继续
-```
-
-## Step 2/8: Choose character route
-
-```text
-进度 2/8｜要不要让角色跟着走？
-
-角色会沿着进度条推进；不选角色也能做一条干净的章节条。
-
-A. 小人走路：上传一张 IP 图，自动生成四帧透明步态
-B. 静态小人：上传一张 IP 图，自动生成一张透明姿态
-C. 不要角色，只做进度条
-D. 用我的 ElleFlow 预设
-
-回复 A、B、C 或 D。
-```
-
-For `A` or `B`, ask only for the IP image, prepare it, and show a result card:
-
-```text
-进度 2/8｜确认角色
-
-我已经按你的原图做好角色，颜色、服装和轮廓都保留了。走路版会给你看四帧循环；静态版只确认这一张透明姿态。
-
-A. 这个角色可以
-B. 我想换一张图
-C. 不用角色了
-```
-
-For `D`, show any available preset's name, character mode, exact style, colors,
-size, scale, and placement, then ask `A. 整套沿用` or `B. 这次自己选`.
-
-## Step 3/8: Choose style
-
-Show the four built-in styles as a visual comparison whenever possible. Do not
-make the creator infer style from internal names alone.
-
-```text
-进度 3/8｜选进度条样式
-
-A. 章节胶囊：章节最清楚，适合 Vlog 和知识内容
-B. 分段跑道：节奏感更强，适合教程和口播
-C. 文字推进：占画面少，适合竖屏
-D. 标签分栏带：适合系列内容和分集主题
-E. 上传一张参考图，按它的感觉做
-
-回复 A、B、C、D 或 E。
-```
-
-For `E`, ask only for one creator-owned reference image. State that logos,
-watermarks, and other people's characters will not be copied.
-
-## Step 4/8: Choose color
-
-```text
-进度 4/8｜选颜色
-
-A. 从视频画面里帮我提色
-B. 上传一张配色图或品牌图
-C. 我直接告诉你一个颜色
-D. 你按当前样式推荐一组
-
-回复 A、B、C 或 D。
-```
-
-For `C`, ask for a simple color name or HEX value. Then show no more than four
-swatches and ask:
-
-```text
-这组颜色会用在进度条、章节标签和文字上。
-
-A. 就用这组
-B. 更亮一点
-C. 更稳重一点
-D. 我重新选颜色
-```
-
-## Step 5/8: Save preset
-
-This is optional and must never block the current video.
-
-```text
-进度 5/8｜下次要不要一键复用这套风格？
-
-样片通过、完整进度条开始导出后，会保存角色、精确样式、颜色、大小和位置；不会保存视频和章节。
-
-A. 保存为我的 ElleFlow 预设
-B. 这次不用保存
-```
-
-For `A`, ask only for a short preset name and record save intent. Write the
-complete `verified` preset only after Step 8 sample approval and final-export
-authorization; do not add a new question then. If the quick-setting check already
-reused an unchanged saved preset, mark Step 5 approved from that reuse decision
-and do not ask this card again.
-
-## Step 6/8: Choose export
-
-The only standard final delivery is a transparent progress-bar MOV placed over
-the creator's original high-resolution timeline. State the alignment condition
-without technical detail.
-
-```text
-进度 6/8｜选透明进度条清晰度
-
-最后会给你一条透明进度条，拖回原来的高清剪映工程，从视频开头对齐即可。
-请确认原工程和这份分析版时长、画面比例、播放速度没有变化。
-
-A. 1080p：日常发布，推荐
-B. 2K：画面更细，文件更大
-C. 4K：超高清项目使用
-D. 原工程后来改过，我重新上传分析版
-
-回复 A、B、C 或 D。
-```
-
-After the resolution is chosen, offer the output folder as a separate small
-choice only when the host can access folders:
-
-```text
-成品放在哪里？
-
-A. 和分析版放在同一个文件夹
-B. 我自己选文件夹
-```
-
-Show the size range and available space after both values are known. Do not ask
-the creator to interpret bytes, codecs, or encoding settings.
-
-When the quick-setting check approved a complete preset, keep its visual scale
-and placement. Still ask for this project's output resolution and destination:
-they affect delivery size, not the reusable visual style. Confirm timeline
-alignment before Step 7.
-
-## Step 7/8: Review the complete design
-
-Show one real-video still with the approved chapters, character, style, and
-colors. State the chosen items in human language.
-
-```text
-进度 7/8｜最后确认
-
-我会按这套方案制作：
-- 章节：<本次内容自适应段数>，已确认
-- 角色：小人走路
-- 样式：章节胶囊
-- 颜色：从视频提取的蓝绿色
-- 清晰度：1080p
-
-A. 开始做 15 秒样片
-B. 改章节
-C. 改角色、样式或颜色
-D. 改清晰度
-```
-
-Do not render until the creator selects `A`.
-
-## Step 8/8: Review sample and export
-
-The sample must cross a real chapter boundary. Explain the task in creator
-language rather than technical format terms.
-
-```text
-进度 8/8｜确认样片
-
-请看这 15 秒：角色走动是否自然、章节切换是否准确、放回原视频后会不会挡住字幕或人物。
-
-A. 样片没问题，导出完整进度条
-B. 我想改一下样式或颜色
-C. 我想改章节时间点
-D. 先不导出
-```
-
-For `A`, export the final `progress_bar.mov`, validate it, and report the plain
-result first: file name, save location, chosen resolution, and how to place it
-at the beginning of the original project. Put technical validation details under
-an optional `查看技术检查` disclosure when the host supports it.
-
-If Step 5 recorded save intent, save the approved static pose or complete
-four-frame cycle bundle now as a `verified` preset, then report its name. Never
-save a rejected or unreviewed sample as the default preset.
-
-## Fast mode
-
-Use fast mode when a returning creator chooses complete reuse, or when the
-creator explicitly supplies a usable video plus all visual choices in one
-message, for example `S1、粉色、小怪走路、2K、沿用上次大小`. Do not replay
-already-specified visual cards. Still require the chapter confirmation, final
-design approval, and sample approval before the full render. Keep one decision
-per reply; fast mode removes redundant stops, not evidence or consent.
-
-## Natural-language and error handling
-
-Map plain responses to the current choices whenever unambiguous. Examples:
-
-- `不要小人` means Step 2 option `C`.
-- `粉色` means Step 4 option `C`, then ask for confirmation of the proposed swatches.
-- `换个胶囊样式` means return to Step 3.
-- `我剪了 3 秒` means return to the starting upload choice and explain why a new
-  analysis copy is needed.
-
-When a response does not map cleanly, do not guess or show every option again.
-Ask one repair question: `你想改的是章节、角色、样式、颜色，还是清晰度？`
+# 简洁五步会话
+
+步骤用于组织工作，不要求用户回五次“确认”。已给出的答案、授权和委托不重复问。
+只有一个实际缺失的决定时才提一个短问题。状态更新、输出和修订无需附选项菜单。
+
+## 1. 先选有无 IP，再做素材预检
+
+先读 returning-users.md。已有有效私有IP而尚未授权复用时，主动问：
+“沿用上次的小怪IP和样式，走快速通道吗？也可以只沿用IP。”
+本轮明确不要角色则不查IP库；上次整套方案是无角色时，快速模式仍保持无角色。
+
+第一次准备制作且未说明角色时：
+“这次用自己的 IP，还是不加角色？有 IP 的话，我会制作四帧行走版。”
+只提供“有 IP / 无 IP”。没有视频再接收已剪好成片，不强制先导出 720p。
+
+“不要角色”直接 none；“用我的小怪/沿用上次四帧”直接走已授权检查。
+旧单张仅兼容读取，告知用户旧方案是单张，询问升级四帧或本次无 IP，不默默转换。
+首次使用的能力预检与视频参数读取可以并行进行；无 IP 不要求图像编辑能力。
+告知输出项目目录，沿用用户已指定且可写的位置；未获授权不在原片目录随意写入。
+
+## 2. 章节按内容重新划分
+
+按 chapter-analysis.md 两轮归类和边界复听，运行证据检查。
+展示“00:00–00:27 开场 / 真实案例”等短表，具体数值来自当前成片。
+名称、时间与数量已给清楚时直接核对，不重问同一句。
+若还缺视觉决定，可以与设计合并展示；只对低把握边界补问。
+
+## 3. 样式、配色与角色空间
+
+八款精选图册放在一起直接比较，可附一两款建议；按已确定章节选择能读清标题的版式。
+先确定角色面向、比例与可用高度，再投入新生图，避免做完角色又返工。
+颜色沿用明确指定/获准旧方案，否则根据当前视频提出一套。青柠仅是介绍页示例。
+按当前成片的真实画面检查条高、字号、角色大小和放置；口播字幕、录屏操作区和课件标题
+都应避让。先做代表帧叠加，按发布尺寸看，具体规则见 export-and-qc.md 的 Video fit check。
+用户已委托“你来定”则AI给方案，不再强迫选菜单；最终与动态短样合并审阅。
+
+## 4. 角色准备或直接复用
+
+无 IP：完全跳过角色素材处理。
+有 IP：使用已授权四帧，或检查参考图编辑能力后生成四帧。
+有效私有IP用character_library.py直接导出角色配置，不再次调用生图；换样式只调整布局。
+无图像编辑时，Agent 写好外部生图提示词供用户回传；也可接收现成四帧。
+改为无 IP 需要用户同意，不能自动降级为静态贴纸。
+
+## 5. 合并预览、短样与交付
+
+显示章节、角色、样式、颜色和尺寸的一份方案，不逐项重启确认。
+首次/变更方案用明确draft路线制作最多15秒的“待审方案”动态草稿，不伪造角色批准。
+多章尽量跨一个真实边界，短片用实际全长；单章核对起止和动作。
+展示章节时间表、样式/角色/颜色、规格与体积估计，并说明确认后继续完整导出。
+用户一次确认可同时覆盖已看过的动态样片和完整导出；不再重复呈现同内容等待第二次确认。
+已有设计批准时可走普通sample；只改颜色/标题则只重做受影响部分。
+“直接做”不自动豁免样片；“跳过样片并导出完整条”已包含豁免与导出授权，不再重问。
+
+### 独立透明交付
+
+样片通过且有完整导出授权，或已有明确样片豁免与导出授权后执行。
+默认只交付独立透明 MOV，保留章节与方案，不重编码原视频。
+清楚说明位置、实际像素、时长；真实解码与 Alpha 检查后才称完成。
+未实际导入编辑器就标未验证，不把用户沉默当验收。
+
+## 回访与快速模式
+
+在第一步检查已知私有方案，缺少复用授权才问：
+“要沿用上次的角色、样式、颜色、大小和位置吗？这条视频会重新分章。”
+明确整套沿用就不再问角色、样式和配色；先检查当前素材与映射。
+新视频时长和章节永远重新核对。具体像素已知时，不改写用户的 2K 含义。
+复用IP与外观后仍复查当前视频适配；只有遮挡、比例或对比有问题时提出局部调整，
+保留其他已确认决定，与同一动态方案一起看，不重新生图或重启整个流程。
+
+首次说明可保存，保存决定与综合确认合并；已有保存授权就完成后直接保存，不追加问卷。
+按returning-users.md保存独立IP并设最近使用；按visual-profiles.md保存整套外观。
+私有复制、读回成功后才告知“下次可沿用”；不把旧任务目录引用当作永久保存。
+草稿未经实际批准不能进已确认库；样片豁免只保留真实角色批准，不伪造整体样片通过。
+新视频先核对语义与时间，再恢复配置；不转移旧批准。旧 schema-4/custom 另按兼容规则处理。
+失败只修对应步骤，保留已有选择；不反复发送起始菜单。

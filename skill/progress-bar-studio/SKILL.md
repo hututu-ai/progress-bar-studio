@@ -1,364 +1,187 @@
 ---
 name: progress-bar-studio
-description: "Create ElleFlow animated chapter progress bars for long or short videos, Vlogs, knowledge videos, and video series. Creators can upload a recommended 720p analysis copy to confirm chapters, turn one uploaded IP image into either one transparent static pose or an approved four-frame transparent walk cycle, choose a style and color, optionally save a reusable preset, and receive a high-resolution transparent ProRes 4444 MOV for their editor timeline. Use for lazy, no-keyframe chapter progress-bar creation, character-led progress indicators, reusable creator SOP presets, transparent PNG/WebP frames, and ProRes 4444 MOV overlays."
+description: 根据已剪好的视频制作语义章节透明进度条，支持无角色、四帧 IP 行走、八款精选样式和参考图定制。保留原视频与用户素材，按宿主实际能力完成分章、预览、透明 MOV 导出及方案复用。
 metadata:
-  version: "0.4.0"
-  compatibility: "Requires local file access plus ffmpeg, ffprobe, and Python 3. Pillow is needed for four-frame character cycles. Transcription, image editing, and editor-import testing depend on the host."
+  version: "0.7.4"
+  compatibility: "Local rendering requires Python 3.10+, Pillow, a CJK-capable font, ffmpeg and ffprobe. Transcription, reference-image editing and editor import depend on verified host capabilities."
 ---
 
-# ElleFlow｜小人走路视频进度条动画
-
-Create a chapter progress bar for any long or short video, Vlog, knowledge
-video, or video series. ElleFlow uses a lightweight analysis copy to understand
-content and draft chapters, then delivers a high-resolution transparent progress
-bar for the creator to place over the original project in an editor. This keeps
-large original videos local and avoids hand-marking timecodes or keyframes.
-
-## First-run onboarding
-
-On the first turn after the Skill is invoked, when the creator has not supplied
-a usable source video or a concrete editing request, send a short welcome
-message before explaining any workflow. Lead with what the creator can send
-next. Do not surface internal terms such as Alpha, ProRes, manifests, QC, or
-workbench in this message. Do not start media processing until a video is
-provided.
-
-Reply in the creator's language. For a Chinese-speaking creator, use:
-
-```text
-ElleFlow｜小人走路视频进度条动画
-
-先选你现在的情况：
-
-A. 我已经有一份 720p 分析版，直接上传
-B. 我有剪映工程，但不知道怎样导出分析版
-C. 我想先看看成品会是什么样
-
-回复 A、B 或 C 就行。
-```
-
-When a video is supplied, acknowledge it and read
-[guided-conversation.md](references/guided-conversation.md) before sending any
-creator-facing reply. Follow its Step 1-8 cards exactly. Keep implementation
-details out of the opening response unless the creator asks for them.
-
-## Mandatory interaction contract
-
-The host may render buttons, menus, or plain text, but the conversation must work
-without platform-specific controls:
-
-- show one decision per reply, headed `进度 X/8`; a returning-user `快捷设置` check is a pre-step and does not consume a numbered step;
-- give a short title, no more than two explanatory sentences, and 2 to 5
-  lettered or numbered choices;
-- render the same choices as buttons when the host supports buttons; otherwise
-  let the creator reply with the letter, number, or natural language;
-- acknowledge the selected choice in plain language before presenting the next
-  step;
-- always accept `改一下` or `返回上一步` and return only to the relevant step;
-- never dump later-step options, codec settings, dimensions, filesystem paths,
-  or implementation vocabulary into a current decision.
-
-The required card wording, natural-language mapping, revisions, and recovery
-paths are in [guided-conversation.md](references/guided-conversation.md).
-
-For a returning creator, inspect the default preset before asking any new
-visual questions. If it exists, make a pre-step `快捷设置` decision, then
-offer to reuse the complete approved bundle: character, animation mode, exact
-style variant, palette, size, scale, and placement. Reuse never carries forward
-the old video's chapters, timing, source, output folder, or render approval.
-
-## Creator-first order
-
-Follow this order. Do not move output folder, resolution, or file-size questions
-into the first creative conversation.
-
-1. **Read video**: accept or help the creator export a 720p analysis copy. When
-   a valid default preset exists, first use the unnumbered quick setting to ask whether to reuse its complete visual
-   bundle. Then probe it internally, derive an editable chapter draft, and show
-   the chapter-confirmation card.
-2. **Confirm chapters**: let the creator accept, edit, or reanalyse the draft
-   before any visual choice.
-3. **Choose character**: offer walking character, light-motion character, plain
-   progress bar, or an approved preset through one choice card.
-4. **Choose style**: show S1-S4 visually where possible, plus one custom-
-   reference route.
-5. **Choose color**: let the creator choose video-derived color, palette image,
-   named color, or an ElleFlow recommendation.
-6. **Save preset**: offer an optional preset name after character, style, and
-   color are approved; record intent only. Write a `verified` preset only after
-   the sample has passed and the creator authorizes the final master.
-7. **Choose transparent export**: confirm the original timeline still matches
-   the analysis copy, then ask for resolution and output folder in separate
-   choice cards. Detect the source orientation internally; do not make the
-   creator calculate a canvas ratio.
-8. **Review and export**: show the combined design, make a 15-second transparent
-   sample after approval, then export the final MOV only after the sample passes.
-
-Treat each decision as one short, focused question. Do not ask the creator to
-choose frame count or character placement: the selected style determines both.
-Do not start a costly render while a decision is awaiting approval.
-
-## Lightweight analysis copy and chapter confirmation
-
-The uploaded video is an analysis copy, not the final publishing asset. Recommend
-`720p` because it keeps uploads manageable while retaining enough detail for
-most Vlogs, talking-head clips, knowledge videos, and series content. `480p` is
-a fallback for very long videos or slow networks, not the default recommendation.
-
-Before upload, tell the creator:
-
-```text
-建议从剪映导出 720p 轻量分析版。它只用于理解内容和做章节，不会替代你的高清原片。
-请在剪辑内容定稿后导出，并保持和原工程相同的时长、画面比例和播放速度；之后把高清透明进度条从视频开头对齐拖回原工程即可。
-```
-
-Preserve source files unchanged. Run
-`scripts/preflight.py --source-video <analysis-video> --json` after receiving
-the video; an unselected output folder is a warning at this point, not a blocker.
-Probe dimensions, fps, duration, audio, and file size internally. Read
-[chapter-analysis.md](references/chapter-analysis.md), make an editable chapter
-draft with real semantic turns, show it to the creator, and ask whether the
-chapter names and boundaries are correct. Never divide a video into equal
-durations.
-
-Detect semantic nodes first, then choose visible presentation chapters. For
-videos up to 3 minutes, normally use 3–5 chapters; use 6–7 only when the content
-has that many strong, distinct turns and the final labels remain readable.
-Longer videos may use more according to content density. Never reuse a saved
-preset's previous chapter count.
-
-Only when the source truly cannot be transcribed should you explain the
-limitation and request a timestamped chapter list. If the content depends on
-small on-screen text, slides, code, or tables that the analysis copy cannot
-reliably show, ask for a clear still or the relevant chapter names. Do not ask
-all creators for a high-resolution source by default.
-
-Do not ask about characters, style, colors, output folder, or resolution until
-the creator has confirmed or revised the chapter draft.
-
-## Character decision
-
-Offer exactly these paths:
-
-- `none`: a clean progress bar with no character;
-- `single-pose`: one explicitly approved transparent PNG; use it only for a
-  static/sticker-style role or restrained light motion;
-- `walk-cycle`: an explicitly approved set of four transparent walking PNGs,
-  plus the sprite sheet and cycle manifest that make the motion reusable.
-
-If the creator selects `none`, record the choice and continue directly to style.
-Do not show a content-free character approval card.
-
-Treat `none` as a render invariant. Do not load or pass any character asset into
-style cards, the combined preview, sample, transparent master, or delivery
-package. Before delivery, inspect at least one preview frame and one decoded
-master frame to confirm that no added character pixels remain.
-
-For a character path, read
-[character-preparation.md](references/character-preparation.md). Preserve the
-uploaded character's identity, colors, proportions, markings, clothing,
-accessories, outline, and texture. Use image editing with the uploaded source as
-the identity reference. Reject any result that redesigns the IP.
-
-For a four-frame cycle, when the host offers an image-editing model, turn the
-creator's one uploaded IP image into one aligned sprite sheet, prepare real RGBA
-PNGs, and split it with `scripts/split_walk_cycle.py`. When the creator asks for
-a static role, generate and approve only one transparent pose instead. Show the
-source, output, loop where applicable, foot baseline, and multi-background edge
-check. Obtain explicit approval before using that character in a combined preview.
-
-Never silently reuse a character from another project. A saved preset is the
-only reuse route, and its complete contents must be shown and approved for the
-current video.
-
-## Style and color decision
-
-Read [style-system.md](references/style-system.md). Show these four built-in
-routes on a simple comparison board:
-
-1. S1 chapter capsules;
-2. S2 segmented runway;
-3. S3 text progress;
-4. S4 divided label band.
-
-Also show `Custom reference` as a separate route. When selected, read
-[custom-reference-style.md](references/custom-reference-style.md), accept one
-creator-owned PNG, JPG, or WebP reference, and extract its layout logic. Do not
-reproduce third-party logos, watermarks, copyrighted characters, or exact
-proprietary artwork.
-
-Character placement is determined by the chosen route:
-
-- S1: on the upper progress-line edge;
-- S2: on the segment baseline;
-- S3: above the track, clear of labels;
-- S4: inside the active band.
-
-Do not ask the creator to decide placement unless she explicitly requests an
-override.
-
-## Color decision
-
-Ask for one of these inputs:
-
-- a HEX value or a named color;
-- a palette image or brand card;
-- a still from the creator's video;
-- permission to propose a palette from the chosen custom reference.
-
-Extract or derive a small editable palette containing main, light surface, deep
-accent, and text colors. Show the swatches with HEX values before approval. Do
-not silently default every project to pink, and do not copy a third party's logo
-or proprietary color treatment as if it belongs to the creator.
-
-## Reusable ElleFlow presets
-
-After the character, exact style variant, palette, size, scale, and placement
-are approved, ask:
-
-```text
-要把这套角色、样式和颜色保存成下次可复用的 ElleFlow 预设吗？
-```
-
-On an explicit yes, ask for a preset name and whether it should be the suggested
-default. Record this save intent. Only after the sample has passed and the
-creator authorizes final export, use `scripts/preset_library.py` to save a
-`verified` self-contained local preset with copies of the approved static pose
-or the complete four-frame cycle bundle, reference assets, and visual
-configuration. It never overwrites an existing preset.
-
-On a later project, inspect a supplied or discovered default preset before the
-new video's chapter card. Show its character mode, exact style variant, palette,
-size, scale, and placement, then ask whether to reuse the complete bundle. The
-creator can reuse it, revise one field, or decline it. Complete reuse pre-approves
-the saved visual decisions after file and real-video collision checks, so do not
-ask the same character, style, color, size, or placement questions again. A
-preset never carries forward source videos, chapters or chapter count, output
-folders, file-size claims, or editor-import claims.
-
-## Transparent-overlay delivery decision
-
-Only after creative choices are approved, ask for the output resolution and
-output folder in separate choice cards. Detect the analysis video's orientation
-and canvas ratio internally; do not ask a novice to calculate or type it. The default and only standard final delivery is a transparent
-progress-bar MOV that the creator places over the original high-resolution video
-in an editor. Do not composite, re-encode, or claim to deliver the creator's
-finished full video.
-
-Confirm that the creator will use the same final timeline as the analysis copy:
-
-```text
-这条高清透明进度条会按当前视频的时长和章节时间点制作。
-请确认：你的高清原工程与上传的分析版时长、画面比例和播放速度一致；后续只需从视频开头把进度条对齐拖进去。
-```
-
-If no folder is specified, propose the analysis-video folder as an inferred
-default. If no resolution is specified, show all three options and recommend
-one; never silently default to 4K.
-
-The following pixel widths are technical planning values for the transparent
-strip, not extra choices the creator must understand. Detect source orientation
-internally and include it in the export plan:
-
-- 1080p: 1920-pixel-wide transparent strip;
-- 2K: 2560-pixel-wide transparent strip;
-- 4K: 3840-pixel-wide transparent strip.
-
-Run:
-
-```text
-scripts/preflight.py --source-video <analysis-video> --output-dir <output-folder> --json
-scripts/estimate_export_size.py <analysis-video> --output-dir <output-folder>
-```
-
-Only after the Step 8 sample approval, reserve the final delivery directory:
-
-```text
-scripts/prepare_delivery.py --source-video <analysis-video> --output-dir <output-folder> --character-mode <approved-mode> --sample-approved --json
-```
-
-Before that, keep samples in the task's temporary work area so a rejected or
-abandoned design does not leave an empty delivery folder.
-
-## Combined preview
-
-Create a representative frame over the real analysis video and a transparent
-overlay preview. Show them together with:
-
-- the editable chapter list and exact timestamps;
-- the approved character or explicit no-character choice;
-- the style route, color swatches, and any custom-reference adaptation notes;
-- subtitle, face, UI, and chapter-label collision checks;
-- white, black, red, blue, brand-color, and checkerboard composites.
-
-Read [style-system.md](references/style-system.md) for track-fit rules. Align a
-character's visible contact foot with the progress coordinate; reject previews
-where it floats, sinks, or blocks chapter labels. Do not animate the full video
-until the creator approves this combined preview.
-
-## 15-second sample and final delivery
-
-Read [export-and-qc.md](references/export-and-qc.md). Render a 15-second
-transparent sample using the approved settings and crossing a chapter boundary.
-Show its actual size, Alpha result, and target-editor import status when tested.
-
-Only after the creator approves the sample may the final transparent master be
-rendered as `progress_bar.mov`. Do not include a full-length `preview.mp4` as a
-default deliverable. If the sample is skipped by explicit creator choice, show
-only a planning size range, label editor import as unverified, and do not call
-the estimate final.
-
-For the final transparent master, prefer QuickTime MOV, Apple ProRes 4444,
-`ap4h`, and `yuva444p10le` or decoded `yuva444p12le`. Never silently replace an
-Alpha MOV request with H.264, ordinary HEVC, ProRes 422, or a filled-background
-video.
-
-After encoding:
-
-- validate the MOV with `scripts/verify_alpha_mov.sh` and decode every frame;
-- verify codec, profile, Alpha, dimensions, fps, duration, and frame count;
-- inspect start, end, motion, and every chapter boundary;
-- create multi-background QC;
-- calculate a checksum for large deliverables;
-- state whether the target editor was actually import-tested.
-
-## Confirmation and revision policy
-
-Use a compact confirmation card for each risk-bearing choice. Include
-`understood`, `evidence`, `confirm`, `next`, and `revise`, then ask one short
-question. Record explicit choices in `decision-log.json`.
-
-Keep approved upstream choices when a creator changes one thing. A complete
-Step 1 preset-reuse answer may mark the corresponding later decisions approved
-with `approvalSource: step1-reuse-preset`; do not turn them into repeated user
-stops.
-
-| Changed choice | Keep | Revisit |
-| --- | --- | --- |
-| analysis video or chapter list | none unless unchanged | every later decision |
-| character | analysis video and chapter draft | style preview, sample, full export |
-| style or color | analysis video, chapter draft, character | combined preview, sample, full export |
-| preset | current project choices | only future reuse behavior |
-| output folder or resolution | creative choices | size check, sample, full export |
-
-Repair the smallest failing artifact and return to the relevant decision. Never
-restart the whole project because one preview or encode failed.
-
-## Bundled resources
-
-- `scripts/preflight.py`: dependency, analysis-video, output-folder, and disk-space checks.
-- `scripts/estimate_export_size.py`: 1080p, 2K, and 4K transparent-export planning ranges.
-- `scripts/prepare_delivery.py`: reserves a versioned final-delivery directory after sample approval.
-- `scripts/preset_library.py`: explicit save and inspection of creator presets.
-- `scripts/verify_alpha_mov.sh`: ProRes 4444 Alpha validation across every frame.
-- `scripts/make_multibg_preview.sh`: RGBA compositing over six backgrounds.
-- `scripts/split_walk_cycle.py`: four-frame splitting, baseline validation, and WebP preview.
-- `references/chapter-analysis.md`: content-to-chapter timing rules.
-- `references/character-preparation.md`: faithful character preparation and QC.
-- `references/style-system.md`: style, palette, placement, and track-fit rules.
-- `references/custom-reference-style.md`: custom-reference adaptation rules.
-- `references/guided-conversation.md`: required Step 1-8 creator cards, choices, revisions, and recovery paths.
-- `references/brand-presets.md`: save and reuse rules for creator presets.
-- `references/export-and-qc.md`: codecs, sample rules, Alpha, and editor checks.
-- `assets/progress-bar-template.svg`: editable neutral vector starting point.
-- `assets/style-catalog.svg`: four-style comparison board.
+# ElleFlow｜视频章节进度条
+
+交付与当前视频同步、手机上字清楚的独立透明进度条。保留原片和角色原件；
+默认不合成或重编码完整视频。制作时用当前视频关键帧做局部叠加检查，成品仍是独立透明条。
+主标题必须完整、清楚；不能输出单字孤行或“提…”这类单字省略号来掩盖排版失败。
+
+## 第一选择：有 IP / 无 IP
+
+先按 [回访与私有IP库](references/returning-users.md) 检查已知记录：已有有效IP而用户尚未选择时，
+主动问是否沿用上次IP/整套方案走快速通道；明确快速模式或沿用时不再重复问。
+本轮明确不要角色优先，跳过IP库和所有角色读取；明确换新IP不套旧角色。没有记录才问下面首次选择。
+
+有视频或准备开始制作时，首先解析用户已经说过的角色选择。尚未指定才问：
+“这次用自己的 IP，还是不加角色？”只给两个选项。有 IP 对应四帧行走；无 IP
+对应 none，立即跳过生图和角色素材读取。不再提供静态贴纸菜单。
+先看样式的请求仍可直接展示无角色图册，不强制回答角色问题。
+
+已授权沿用的四帧方案可直接检查后复用。旧单张项目仅保留兼容读取，不自动转四帧、
+不重新当作默认路线；说明它是旧单张方案，只问升级四帧还是本次不加角色。
+
+用户主流程：上传素材 → 看一次完整动态方案 → 收到成品与已保存方案。
+内部五步：① 复用/有无IP与后台预检 → ② 语义分章 → ③ 样式、配色与角色空间
+→ ④ 复用或准备四帧（无IP跳过）→ ⑤ 一次动态审阅、透明交付与私有保存。步骤不等于五次确认。
+先按内容确定版式和角色可用比例，再投入生图；分章与能力检测可并行，费用授权另行明确。
+
+## 从用户给出的内容开始
+
+无视频时说：“把已经剪好的视频拖进来就能开始；文件太大时，再用 720p 分析副本。
+也可以先看看样式。”可提供“上传视频 / 先看样式 / 导出帮助”，不要求先回复字母。
+已有可读取成片就直接预检，不因它不是 720p 或不是从剪映导出而要求重导。
+用户只想看样式时先展示无角色图册，不创建虚构的视频项目。
+
+收到视频后读 [会话示例](references/guided-conversation.md)，但不要逐字照卡或强迫用户
+回答固定轮数。五步用于整理状态；已有答案和本轮明确授权持续有效。每次只问真正缺失、
+影响下一步的一项。进度、解释、文件交付和状态回复不必附选择题。
+
+- “不要角色”直接记录 none，不再询问角色；“不存预设”跳过保存卡。
+- “你来定 / 按视频配 / 直接做”是把对应的常规视觉选择交给 Agent。自己提出适配方案，
+  在真实画面上检查，合并展示章节和设计，不把已委托的事项重新变成逐项问卷。
+- 明确“整套沿用”时，检查文件后说明沿用内容；不用再问是否沿用。
+- 明确“跳过样片，直接导出完整条”同时表达豁免和导出授权；如已有必要输入，记录后执行，
+  不再索取同一句许可。“直接做”本身不等于跳过样片审阅。
+- 改颜色只改颜色及受影响的预览；不要重问角色、章节、文件夹。始终接受“改一下 / 返回上一步”。
+
+默认预设只从用户指定或已知的私有预设目录读取，不扫描用户所有文件。命令为：
+优先检查完整视觉方案：`python scripts/visual_profile.py show --default --library-dir <已知目录>`。
+有记录路径时用 `show --profile <profile.json>`。得到复用授权后用
+`restore --profile <方案> --timeline <当前章节.json> --output <新路由.json>`，不重问已有选择。
+已明确无 IP 时，show 和 restore 都加 `--no-character`，不先读取旧角色再隐藏。
+新时间线仍须先通过本次来源与章节核对。没有新方案时，再按旧品牌预设路径：
+`python3 scripts/preset_library.py show --default --library-dir <已知预设目录> --require-verified --json`。
+没有默认方案是正常情况，直接开始新项目。指定文件用 `show --preset <文件> --require-verified --json`。
+旧 schema-4 校验通过仍需核对渲染映射；受损或缺字段的旧 profile 只作参考。
+完整视觉方案可以直接还原其渲染契约，但不替代当前视频的语义与画面冲突检查。
+IP另存独立库，样式指纹变化不意味着需要重新生图。整套恢复受阻时优先保留已确认IP，只复核受影响外观。
+
+## 先确认可兑现的能力
+
+WorkBuddy 或其他新宿主首次运行时，先读 [宿主接力说明](references/workbuddy.md)。
+优先使用当前解释器调用 Python 脚本；路径相对实际 Skill 根目录，不写死 Codex 目录。
+
+用 `python3 scripts/preflight.py --source-video <视频> --json` 检查本地依赖；
+需要时加 `--output-dir <目录>`。未选输出目录不妨碍分析，Pillow 缺失则任何角色模式
+都不能本地渲染。先完成还能做的分章/方案，给当前环境的最小恢复动作，不擅自安装工具。
+
+脚本不能发现宿主转写或生图能力。检查当前可调用工具及其证据，再决定话术：
+转写需要可获得时间戳；参考图编辑需要能接收原角色并返回可读取图片。
+没有这些能力时，不承诺自动听懂或一图生成四帧。原图可识别不等于可编辑。
+预检可加 `--font <字体> --text <实际章名>` 检查真实中文字形，不以字体文件能打开代替覆盖检查。
+先找宿主已有可用解释器与依赖；不反复尝试已知缺 Pillow 的环境，不擅自安装。
+
+- 无转写：优先接收当前视频导出的 SRT/VTT 或已有带时间稿，由 Agent 整理章节；
+  用画面核对，只有确实不清楚的边界才补问。无时间的稿不能当作已校准字幕。
+- 无角色编辑：已有合格四帧可继续用；否则提供“用现成四帧 / 经用户同意改为无角色 /
+  我生成提示词供外部生成”的可执行选择。不给用户布置自行写提示词或抠图的工作，
+  不擅自把已选走路改为静态，也不丢掉已完成章节。
+- 无编码能力：给可下载的接力配置与已完成素材，清楚说明透明 MOV 尚未完成。
+
+## 内容、角色和设计
+
+读 [分章方法](references/chapter-analysis.md)，先理解全片主线，再合并可见章节。
+新项目默认 4 章，允许 3–5 章，最多 5 章。先按语义归组；超过五章时合并同一主题的
+子步骤、案例和前后对比，不平均切、不凑数、不继承旧视频章节。旧项目保留原时间线与数量。
+章节绑定当前 sourceId、原话与时间证据。分章后运行 `scripts/validate_chapters.py`，
+新项目加 `--current-policy`，导出前加 `--require-reviewed`，验证来源、覆盖、边界和原话引用。
+每章复听后明确记录布尔值 `needsReview=false`；缺状态只表示未记录，不能视为已复核。
+结构通过不等于语义判断正确，仍需按分章方法复听转折。用户已给可信章节时核对并沿用，不强迫重新分析。
+
+新项目只开放 none、walk-cycle。none 不读取任何角色文件；四帧必须姿态真实不同，
+不平移同一张冒充。渲染器的 single-pose 仅保留旧项目兼容，不作为新流程选项。读
+[角色准备](references/character-preparation.md)，只使用当前用户提供或明确授权复用的角色。
+首次生成的新角色做身份与边缘检查；已批准的原素材不重复请求身份确认。
+先固定原图不对称标记与本轮生成额度；生成后分别验收身份、四阶段、透明和轨道，不以
+四文件/哈希不同冒充换步。用 `prepare_walk_sheet.py` 准备透明输入，再拆帧；复杂背景停下接力。
+新生图同时提供 `build_walk_pose_guide.py` 的近侧/远侧肢体参考，第三、四格明确交换支撑与摆臂；
+不能把姿态参考颜色/比例画进原IP。四个完整独立主体未对齐等格时用 `regrid_walk_sheet.py`
+整体平移重排，保留实像素；人物粘连/已裁断就停。重排只修构图，不修步态、不产生批准。
+用 `build_walk_review.py` 输出实际GIF，连续看1–2–3–4–1至少六周期，检查自然度与循环接缝；
+不可只看单帧判通过，不能靠加速掩盖踢腿/跳步。没有实际播放证据则记未验证，交真实GIF供用户审阅。
+新对齐四帧可设共享 `bodyPivotX` 消除逐帧脚点X抖动，脚底Y仍取实际可见像素；不改旧方案。
+所有准备与拆帧使用新版本目录，不覆盖原图或已确认帧；多底色检查可直接用 Python，无需Bash。
+
+选择样式读 [样式与颜色](references/style-system.md) 和
+[视觉比例](references/style-grammar.md)。八款放在同一张 `assets/style-catalog-selected.png`
+中直接比较，可附少量适合当前视频的推荐，不再把其余款式藏在第二层菜单。
+图上沿用原编号，当前保留 01、02、07、08、10、11、13、15，内部映射由 `style_router.py catalog --creator-facing` 获取。
+名称、路由、外观版本和进度映射唯一来源为 `assets/selected-styles.json`。
+Agent 用 `style_router.py new-config` 建立当前方案，不手写一套通用版本覆盖八款。
+01/02/08 支持完整章名按需多行；高度一次算好，全片固定。其他款放不下时先准确简称，
+仍不合适再展示这三款的实际替代预览，不强行合并语义章节或自动换样式。
+实际字体与真实粗体文件由 Agent 填入，用户不需要测量字宽和脚点。
+旧项目没有该字段时保留原外观，不把本次改款静默套到已批准素材上。
+不要把图上编号当作旧 S 编号或旧图册编号。
+
+内部稳定键和迁移规则见 [样式路由](references/style-routing.md)：
+classic:S1–S7 与 gallery:01–08 是兼容实现的技术列表，不是另外两套待选菜单；历史 S 样式用 legacy:S*。
+所有直达请求都先判定来源。用户说“上次 S6”且历史来源明确时保持旧含义；来源不明
+只展示旧章节卡片/新角落圆环等相关预览让用户选，不要求用户填写 origin 或技术键。
+Custom 是独立参考图路线，不能静默改成某个内置样式。
+
+配色优先级：本次明确色值/指定参考图 → 明确授权沿用 → 当前视频的背景、标题、字幕。
+否则由 Agent 看多个代表画面提出一套可编辑配色；人物肤色或孤立噪点不主导取色。
+没有自动提色脚本，未看画面就不能说已经提色。介绍页只用青柠示例，不展示多配色菜单；
+这不限制用户实际视频的配色。
+保留经典 S3 的纯文字、细分隔和短下划线，以及经典 S4 的薄填色带。
+
+## 预览、导出与复用
+
+获知实际分辨率、时长、fps 后，在真实画面上检查字幕、人脸、标题、角色脚点与安全区。
+“与视频匹配”同时指内容时间、视觉风格和落地比例：先看当前成片，再选能协调其画面的样式、
+配色、字级、条高与角色大小；青柠图册和旧项目都不自动成为本条视频的设计。
+交付前将实际条叠到有代表性的当前视频帧上，按预计发布尺寸检查；匹配检查与动态草稿合并，
+不新增一轮问卷。不能看实际画面时标记视觉适配未验证，不能用字幕、六底色或空白合成片代替。
+具体检查与私有证据见 [视频适配检查](references/export-and-qc.md#video-fit-check)。
+用户未指定清晰度或目录时才补问；平台只有附件交付时不询问无法访问的本机文件夹。
+已有可写项目目录可作为建议，不能把原视频目录自动视为已授权写入。
+保留明确像素尺寸；不能把旧 2160 宽的“2K”静默换成 2560。详情见
+[渲染契约](references/rendering.md) 与 [导出验收](references/export-and-qc.md)。
+
+首次/变更方案默认先生成标明“待审方案”的动态草稿，合并展示章节时间表、角色、样式、配色、
+实际规格与体积估计，一次审阅。用路由配置reviewState=draft和`style_router.py mov --purpose draft`，
+最多15秒、尽量跨真实切章；草稿可使用尚未批准但技术检查合格的四帧，不填写假approved=true。
+草稿不能进入final、保存成已验收视觉方案或当用户已批准。用户确认后才更新本轮决定与新配置，
+移除待审标记导出；确认同一动态短样不再另外要求一轮同内容样片。明确说明“确认后导出完整版”，
+用户可在一次回复同时批准设计/短样和完整导出；保存决定也合并，不用沉默代替授权。
+已获本轮设计批准时仍可直接做普通sample。长度以实际值为准，单章检查起止和动作，不强求跨章。
+若用户已明确豁免样片并授权完整导出，使用 `prepare_delivery.py --sample-waived`，
+记录 sampleApproved=false，不伪造样片批准。默认流程不主动推销跳过样片。
+
+MOV 使用 ProRes 4444，无音轨；统一真实帧时间取样，不把编码末帧强推到时间线终点。
+全量解码检查 Alpha、时长、尺寸、帧数，并核对章节前后帧和手机尺寸可读性。
+浏览器/合成素材/编码成功不代表剪映兼容，只有实际导入才记录通过。
+保留版本化成品，拒绝覆盖；最终只说明真实文件位置、规格和验收结果。
+
+首次告知完成后可保存以便下次复用，保存决定合并在综合确认；用户已要求自动保存时直接执行，
+不再问同一句，明确不保存则跳过。保存失败不阻挡已完成交付，但不能声称已记住。具体见[回访与私有IP库](references/returning-users.md)：
+- 获准四帧用 `character_library.py` 复制到当前用户私有目录，独立于聊天、原项目和渲染器；不重新生图。
+  成功后下次主动提出快速通道，可只复用IP，也可复用整套样式；先检查资产，不继承旧视频秒数。
+- 八款实际路由统一用 [完整视觉方案](references/visual-profiles.md) 保存字体、配色、外观版本、
+  尺寸、四帧、脚点与进度模式；只在用户同意、真实样片通过且已获完整导出授权后执行。
+  不保存原视频、旧章节和时间线，不把旧批准转成本条视频的新批准。用户拒绝保存不再问。
+- 旧 schema-4/custom 方案按 [品牌预设](references/brand-presets.md) 兼容检查，不能改编号冒充新方案。
+- 旧 profile：保留已知字段，Agent 搜索字体、测脚点、换算缩放并做对比预览；
+  用户只决定尚未授权的复用或无法还原时的视觉替代，不填写坐标。不能自动恢复的项给清楚下一步。
+
+所有授权与来源证据保存在私有 decision-log。新视频、旧配置或样片豁免都不能产生
+虚构的 verified 状态。公共包不包含用户状态、角色、视频、字体或私有路径。
+
+## 按任务读取资源
+
+- [会话示例](references/guided-conversation.md)：只取当前缺失决定的卡片。
+- [确认与修订](references/confirmation-gates.md)：记录已有授权与最小回修范围。
+- [角色准备](references/character-preparation.md)：四帧制作、透明与脚点检查。
+- [WorkBuddy 接力](references/workbuddy.md)：本地导入、能力预检、跨系统执行与真实验收。
+- [渲染契约](references/rendering.md)：classic JSON、编码、品牌预设映射边界。
+- [样式路由](references/style-routing.md)：精选图册选择、兼容原样式和保守迁移。
+- [完整视觉方案](references/visual-profiles.md)：八款完整配置的保存、校验与新时间线复用。
+- [回访与私有IP库](references/returning-users.md)：首次保存、主动复用IP、固定私有位置与快速通道。
+- `scripts/build_routed_catalog.py`：可重建无角色合成图册；仅开发审查使用 `--technical` 显示内部键。

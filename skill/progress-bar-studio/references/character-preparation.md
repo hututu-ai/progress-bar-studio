@@ -1,129 +1,126 @@
-# Character preparation
+# 原 IP → 四帧行走
 
-Convert every user-uploaded static character into an approved same-IP walking
-pose and transparent PNG before designing or animating the progress bar. The
-user should not need to redraw the pose or remove the background manually.
+新项目开头只选有 IP / 无 IP。有 IP 对应四帧；none 跳过全部角色文件与生图。
+single-pose 仅恢复历史配置，不出现在新菜单，不代替失败的四帧。
+用户不需要自行写提示词、测脚点或抠图。Agent 完成可完成的准备；缺能力时保留进度并明确接力。
+先按returning-users.md检查获准IP库，能复用就跳过生图。新生成前先确定本次版式的角色空间。
 
-## Preserve the source
+## 1. 检测工具，固定身份与预算
 
-- Keep the original uploaded file unchanged.
-- Work on a versioned copy.
-- Preserve the character's identity, colors, proportions, outline, texture,
-  clothing, accessories, and distinctive markings.
-- Treat the uploaded image as the identity anchor. Pose and expression may
-  change only as needed to create a clean walking or running action.
+实际工具必须支持原图参考编辑并返回可读取文件。能看图、模型名称均不能证明可以编辑。
+无此能力时由 Agent 给完整外部提示词并接收四帧；或经用户同意改为无角色。
+不要未经同意换平台、上传私人角色或调用收费服务；记录本次次数/额度，用完即停。
 
-## Create the walking pose
+读取原图，私有记录身份清单：头身比例、左右两侧分别有什么颜色/图案、服饰、配饰、
+尾巴和脚掌。只记录看得到的事实；被遮挡部分标记不确定，不能擅自镜像补齐。
+例如单侧绿脚不能在提示词里改成“两只绿脚”；这只是示例，不能套给其他 IP。
+保留原件，以版本目录存本轮原始生成图、实际提示词、返回格式与失败原因。
 
-When the source is static and the creator selects `walk-cycle`, automatically
-turn the uploaded IP image into a four-frame walking or light-running version
-before background extraction. When the creator selects `single-pose`, generate
-only one transparent full-body pose; do not spend image-generation work on a
-walk cycle that will not be used.
+## 2. 一次四格，明确四阶段
 
-- Default to a full-body, three-quarter side view facing right.
-- Use a readable locomotion silhouette: one leg forward, one leg back, opposing
-  arm swing, and hair, ears, clothing, or tail following the motion.
-- Preserve head shape, facial markings, palette, accessories, outline
-  thickness, texture, and overall proportions.
-- Change a closed-eye, yawning, sitting, or front-facing source into a clear,
-  awake, friendly walking expression without redesigning the IP.
-- For `single-pose`, use one approved hero pose with no frame-by-frame walk
-  requirement.
-- For `walk-cycle`, go directly to an aligned four-frame cycle. The creator
-  should not need to choose a frame count.
-- Generate against a flat chroma-key color that is absent from the character,
-  then build and verify the Alpha channel separately.
-- Show the source and generated pose side by side. If any identity anchor
-  drifts, reject the result and retry with targeted constraints.
+先运行 `python scripts/build_walk_pose_guide.py --out-dir <新版本/pose-guide> --layout 2x2`。
+它输出无身份的近侧/远侧肢体参考及关键点JSON，颜色仅标深度，不是角色配色；不是最终IP图。
+生图实际传入两张参考：角色原图为身份锚点，pose-guide.png只约束四阶段姿态与顺序。
+明确第一格近侧腿向前、近侧臂向后；第三格交换为远侧腿向前、近侧臂向前；
+第二格近侧支撑/远侧经过，第四格远侧支撑/近侧经过。不要仅说解剖“左/右”，让模型重复同侧动作。
+原IP若有不对称标记，始终跟随相应肢体，不跟随画面左右；参考色不能画进IP成品。
+不能复制骨架头身比例、文字、边框或颜色。只给文字提示不能保证四阶段成立，仍需逐格与循环复核。
 
-## Choose the extraction method
+优先请求真正透明的 RGBA PNG。工具不支持时再选角色中没有的均匀纯色背景；
+不要默认绿幕，灰白棋盘格、地板或文件名也不能当透明。
+优先横排；模型更适合2×2时明确布局；顺序都是左到右、上到下。
+四次独立生图容易漂移，除非有明确原因，不先走这条路线。
 
-Inspect the actual image before choosing a method.
+Agent 按原图填写下列提示词，并使用工具真正的原图参考参数：
 
-- For a uniform exterior background, prefer a connected-background mask or a
-  carefully reviewed segmentation mask.
-- Never use a global white colorkey when the character contains white areas.
-- For a complex photographic background, use image editing with the uploaded
-  image as the reference. Limit the instruction to background removal and edge
-  repair.
-- If an image edit changes the character, discard it and use a mask-based method.
-- If the model returns an opaque image, create the Alpha channel separately.
+> 使用所附角色原图作为唯一身份参考；第二张骨架图只参考姿态和近远肢体层级，不能复制其颜色、比例或文字。制作角色面向右侧的完整四帧步行周期。
+> 严格保留：【逐项填写身份清单，明确左右与不对称标记】。
+> 【横向四等格 / 2×2四等格】，每格一个完整角色，约10%边距，不跨格。
+> 同画布、同尺度、同头身比例、同身体横向中心、同脚底基准。无文字、编号、地板或装饰。
+> 近侧指靠近镜头的一侧，远侧指被其遮挡的一侧，不等同于画面左/右。
+> 顺序：①近侧脚向前触地、远侧脚在后，近侧臂向后；②近侧腿承重、远侧脚屈膝从身体下方经过，不能向后踢起；
+> ③远侧脚向前触地、近侧脚在后，近侧臂向前；④远侧腿承重、近侧脚屈膝从身体下方经过。前后半周期必须交换遮挡和支撑关系。
+> 双臂与腿反向摆动，头部稳定，仅轻微自然起伏，不能跳跃、滑行或四格同一大跨步。
+> 【真正透明RGBA PNG；宿主明确不支持时，填写已核对不在角色中的纯色背景】。
 
-## Create the canonical PNG
+打哈欠/坐姿可变成清醒友好的走路表情，不改变身份。
+不同文件或不同哈希不证明真实步态。失败后先指出具体错误并收紧提示词，再核对剩余额度；
+不无限重试、不修色凑成通过、不在角色缺肢时继续做成品。
 
-- Export RGBA PNG as `character-walk-transparent.png`.
-- Keep the full character, including hair, ears, tail, hands, feet, shadows that
-  belong to the artwork, and small accessories.
-- Add 8–12% transparent padding around the visible bounds.
-- Preserve native resolution. Offer upscaling when the character is too small
-  for the requested output, and require approval if upscaling changes linework.
-- Keep semi-transparent antialiased edges. Avoid hard jagged cutouts.
+近/远侧判断看髋部连接、裤口/裙摆遮挡、前后肢体层级和反向摆臂，不能只看脚在画面左还是右。
+对称肢体的第1/3格外轮廓可近似，仍可能通过遮挡交换形成半周期；不应仅凭轮廓相似误判复制。
+裙摆遮住腿根时如无法判断，标uncertain。技术合格的完整帧可制作明确未批准的诊断循环，
+必要时用显式draft路线看脚点与自然度；不能据此升级为已确认或存入复用库。
+明显缺肢、持续同侧支撑且摆臂不换、跳跃/滑行则停止正常导出；不要靠加速掩盖。
 
-## Verify transparency
+## 3. 先看原图，再准备透明输入
 
-Do not infer transparency from the filename or file extension.
+先看身份、完整肢体和四阶段；明显不合格直接保留失败状态，不继续导出。
+命令相对实际 Skill 根目录，用已验证的 Python：
 
-- Confirm that the PNG contains an Alpha channel and transparent corner pixels.
-- Inspect for white or dark halos, missing interior details, transparent holes,
-  clipped extremities, colored spill, and opaque background remnants.
-- Composite the PNG over white, black, red, blue, brand-color, and checkerboard
-  backgrounds using `scripts/make_multibg_preview.sh`.
-- Show the transparent PNG and multi-background QC image to the user.
-- Obtain approval before using the character in style previews or animation.
+```text
+python scripts/prepare_walk_sheet.py --input <本轮原图> --layout horizontal --out-dir <新版本/prepared>
+python scripts/prepare_walk_sheet.py --input <纯色原图> --layout 2x2 --remove-flat-background --out-dir <新版本/prepared>
+```
 
-## Generated walk-cycle variants
+提前说明输出位置：prepared-sheet.png、preparation.json、multibg-review.png。
+脚本只准备已有图片，不生图或批准。没有透明通道时须明确请求去底。
+纯色去底测实际边缘颜色，只移除与边界相连的近色像素，保护白色身体；
+禁止全局白色色键，或按灰色色差把人物设为半透明。
+复杂场景、地板、棋盘格改用审查后的分割蒙版，不能盲目调高阈值。
+主体含与背景相连的同色区域时也可能损伤，仍需复核。
+保留原尺度与格子；触格边界会报错，避免裁掉尾巴；不单独裁四帧、拉伸或自动补肢体。
 
-Prefer one horizontal sprite-sheet generation over separate independent image
-generations. A single sheet gives the image model one shared canvas and reduces
-identity drift. Generate on a flat chroma-key background absent from the
-character, remove it from the whole sheet, and then split equal-width cells.
+若原生输出四格尺寸不齐或完整人物跨过等分线，先检查四个人物是否真的分离且没有碰原画布边缘。
+满足时改用 `python scripts/regrid_walk_sheet.py --input <透明原图> --arrangement 2x2 --out-dir <新版本/regridded>`；
+单行用horizontal。它按完整Alpha连通主体重排为横向四等格，不要求源宽可被4整除。
+仅做整体平移：统一画布、候选上半身基准和脚底，保留RGBA颜色/Alpha，不独立缩放、镜像或重绘。
+四个主体粘连、已被原画布裁断、明显缺肢、额外大物件或碎片归属不明时拒绝，不强拆凑数。
+报告记录每帧源区域和位移、微弱远处Alpha遗漏量；所有Alpha>32像素须保留。
+最多允许极少远处低Alpha噪点不进派生画布，原始图永远保留，多底色仍须看；不是全局硬切Alpha。
+该工具只修构图，gaitReview和identityReview仍pending。原图步态错误不会因重排变正确，禁止提升为已通过。
 
-### Four-frame full cycle
+核对白、黑、红、蓝、品牌色、棋盘格六底，尤其看白色身体是否被底色透穿。
+透明边角与局部255像素不足以证明主体正确。准备报告始终标记
+identityReview/gaitReview=pending、userApproved=false；程序不能代写视觉通过。
 
-Use by default for frame-by-frame walking:
+## 4. 拆帧、身体基准、轨道短样
 
-1. left contact;
-2. left passing with a subtle body rise;
-3. right contact;
-4. right passing with a subtle body rise.
+```text
+python scripts/split_walk_cycle.py --input <prepared/prepared-sheet.png> --out-dir <新版本/cycle> --fps 6
+python scripts/make_multibg_preview.py <cycle/character-walk-frame-01.png> <新版本/frame01-qc.png> <品牌HEX>
+```
 
-Play as `1-2-3-4`. Default to 6 fps for a soft Q-style jog and 8 fps for a
-brisk walk. Use a faster cadence only after the loop reads naturally at the
-smallest delivery size.
+六背景有 Python 入口，Windows 无需 Bash；旧.sh只兼容。
+拆帧输出四张RGBA PNG、横向sheet、四帧WebP与cycle.json；
+拒绝空帧、不透明、重复/仅平移同姿势、异画布、已有同名文件。
+技术通过不代表身份或步态通过。2×2先prepare再拆帧，JPEG不能改名冒充透明PNG。
 
-### Frame consistency requirements
+脚点取Alpha>32实像素，忽略近乎透明噪点。preparation.json提供初始contacts，Agent复核支撑脚。
+新对齐四帧同时填同一个bodyPivotX（原格子身体横向基准），Y仍用各帧脚底，
+避免逐帧脚点X变化让身体左右抖动。格子中线只是候选；头/躯干不齐需整体平移到共享画布，
+不能用独立裁图中心代替身体中心。字段支持两套渲染器，不悄悄改旧项目显式脚点。
 
-- Keep the same canvas size, character scale, ground line, facing direction,
-  palette, expression family, outline thickness, lighting, and texture.
-- Keep the head and torso nearly fixed in scale; change only limbs, tail, hair,
-  clothing follow-through, and a restrained vertical body shift.
-- Preserve transparent padding around every frame. Do not auto-trim frames
-  independently because that causes visible jitter.
-- Reject a sheet if any frame loses markings, accessories, fingers, feet, ears,
-  tail details, or clothing elements.
-- Reject any frame that turns toward the camera, reverses direction, changes
-  proportions, or redraws the IP.
-- Show the source, all frames, an animated loop, and multi-background QC before
-  progress-bar layout.
+顺序1–2–3–4，先6fps，必要时8fps；不能加速掩盖缺过渡。
+必须把四帧真正连成GIF连续审阅，不能仅看四张单图就记录“自然”。
+`python scripts/build_walk_review.py --cycle <cycle.json> --out-dir <新版本/gif-review>`
+输出约6fps/8fps两份无限循环GIF及本地对比页，读回实际四帧、时长和loop=0。
+复用已有循环时保留 manifest 的实际播放顺序；报告、循环标识与GIF一致，不重排获准素材。
+changeBox仅说明像素是否变化；不同换步、同轮廓换色和首尾接缝都须实际观看，不能由差异框批准步态。
+至少看六个周期，特别检查4→1接缝：头/身是否跳、支撑脚是否交替、是否踢腿/单脚跳/滑行、节奏是否突兀。
+没有可连续播放的查看器时如实记录未验证，并把实际GIF交用户看；解码通过和静态截图不能冒充看过动态。
+GIF白底仅用于审阅，透明PNG与最终MOV仍保留Alpha；最后采用的步频写进角色配置，不能GIF一套、成品另一套。
+骨架参考只能提高可控性，不能保证动作自然。两档都别扭就保留未通过，不以加速或插值伪造补帧。
+检查尺度、面向、主要特征一致；接触帧落地，经过帧交替抬脚，不连续跳跃。
+检查头/躯干横向稳定、落脚接触轨道、角色与填色端共享进度映射，以及最小显示尺寸。
+展示原图、四帧、循环、六背景和轨道短样，与章节/设计合并确认，不新增多轮身份问卷。
+只有实际批准或明确复用授权才能填渲染器approved=true。
+尚未获批时可以通过显式draft路线做带“待审方案”标记的短预览，保持approved=false；
+技术检查仍不跳过，不能把draft当已验收素材。综合动态确认通过后，按已有保存授权复制到独立IP库，
+下次直接复用四帧、步频和脚点；用户换样式不会触发生图。
 
-### Track-contact preparation
+## 分层验收
 
-- Record the Alpha-visible bottom and the forward contact-foot anchor for every
-  frame; do not use the padded PNG rectangle as the ground reference.
-- Keep visible-bottom spread within 0.5% of frame height or 2 pixels, whichever
-  is larger. Shift complete frames on a shared canvas when correction is
-  needed; never crop or scale frames independently.
-- Create a shared-crop layout derivative when large transparent padding makes
-  accurate track placement difficult. Preserve the canonical padded frames.
-- Verify frames twice: first alone on checkerboard, then with the contact foot
-  placed on the actual progress line used by the selected style.
-- Reject a cycle when a contact frame has no planted foot, a passing frame looks
-  like another long lunge, or the feet appear to skate above the track.
-
-Export:
-
-- `character-walk-frame-01.png` through `character-walk-frame-04.png`;
-- `character-walk-spritesheet.png`;
-- `character-walk-preview.webp`;
-- `character-walk-cycle.json` with frame order, fps, canvas size, and warnings.
+分别记录：原图编辑实际调用 / 四格生成 / 技术透明 / 身份保持 / 四阶段步态 /
+轨道短样 / MOV全量Alpha / 编辑器导入。前一项通过不替代后一项。
+失败图片、准备文件、WebP、配置都不能冒充透明MOV成品。

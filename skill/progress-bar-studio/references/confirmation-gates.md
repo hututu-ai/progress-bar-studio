@@ -1,158 +1,54 @@
-# Creator-first confirmation gates
+# 授权与最小回修
 
-Use this reference with [guided-conversation.md](guided-conversation.md). The
-conversation guide controls the creator-facing Step 1-8 cards; this file controls
-what must be confirmed, recorded, and regenerated behind those cards.
+配合 guided-conversation.md 的五步流程；旧文档的 Step 7/8 指设计/样片授权，
+只是历史记录字段，不应变成八轮提问或重新解释旧批准记录。
 
-## Interaction enforcement
+## 决策及证据
 
-Every creator-facing reply must contain exactly one current decision. Use the
-matching card from `guided-conversation.md`, headed `进度 X/8`, with 2 to 5
-choices. A host may render buttons, but a letter, number, or unambiguous natural-
-language answer must work everywhere.
-
-The returning-user `快捷设置` card is an unnumbered pre-step. It never creates a
-second visible `进度 1/8` card.
-
-After each choice, repeat the selected value in plain language and then show the
-next step. `改一下` and `返回上一步` must return to the smallest relevant
-decision. Never treat silence, an upload, or an ambiguous click as approval.
-
-### Returning-user fast path
-
-When a valid default preset exists, the first decision for the new video is an
-unnumbered compact reuse question before Step 1 and before any new visual question. The
-summary must name the character mode, exact style variant, palette, size, scale,
-and placement. An explicit complete-reuse answer may pre-approve Steps 2, 3, 4,
-the already-saved Step 5 choice, and the reusable size/placement portion of Step
-6 after file and collision checks. Keep those decisions in the log with
-`approvalSource: step1-reuse-preset`; do not create redundant user stops.
-
-Step 1 still derives and confirms chapters for the new video. Output folder,
-output resolution, combined preview, sample, and final render authorization are
-never inherited. A preset reuses visual grammar, not chapter count or delivery
-size.
-
-## Required decisions
-
-| Step | Approval needed | Evidence shown before approval | On revision |
-| --- | --- | --- | --- |
-| 1. Chapters | chapter names and timestamps | semantic chapter draft and transition reasons | rerun only chapter analysis |
-| 2. Character | walking, static, plain, or preset route | source/result, edge, baseline, and loop evidence where relevant | rebuild character and later visual work |
-| 3. Style | S1-S4 or custom-reference route | visual comparison or adapted reference preview | rebuild later visual work |
-| 4. Color | approved palette | no more than four named swatches | rebuild later visual work |
-| 5. Preset | save intent or do not save | exact character, style, and palette summary | save only after Step 8 passes |
-| 6. Export | resolution and destination | original-timeline alignment confirmation, estimated size, available space | rerun only export planning |
-| 7. Design | complete visual design | real-video still with chapters, role, style, and colors | return to the changed creative step |
-| 8. Sample | final export permission | 15-second transparent sample across a chapter boundary | rerun sample and final export only |
-
-## Step-specific rules
-
-### 1. Analysis video and chapters
-
-Treat the uploaded video as a lightweight analysis copy, not the final publishing
-asset. Recommend a 720p export from the creator's editing project. It must
-preserve the original timeline's duration, aspect ratio, order, and playback
-speed. Explain that 480p is a fallback for very long videos or slow networks.
-
-Do not ask about character, style, color, presets, output, or resolution until
-the chapter draft is explicitly confirmed. If transcription fails, ask for a
-timestamped chapter list. If small on-screen text is unreadable, offer a clear
-still, a chapter name supplied by the creator, or proceeding with the current
-draft. Never require a high-resolution original by default and never divide a
-video into equal lengths.
-
-### 2. Character
-
-The creator chooses `walk-cycle`, `single-pose`, `none`, or an approved preset.
-For `walk-cycle`, turn one uploaded IP image into four approved transparent
-walking frames and retain the sprite sheet, cycle manifest, frame order, and
-foot baseline. For `single-pose`, prepare one approved transparent static pose.
-For either character route, preserve identity and show the prepared asset before
-continuing. For `none`, record the choice and proceed directly to style.
-Treat `none` as a render invariant: do not load a character into later style
-cards, combined previews, samples, transparent masters, or delivery packages.
-Inspect one preview frame and one decoded master frame before delivery to
-confirm no added character remains.
-
-### 3. Style and color
-
-Show built-in styles visually whenever possible. A custom route requires a
-creator-owned reference image and must remove third-party logos, watermarks, and
-characters. The palette must remain editable and never silently copy a third
-party's treatment as the creator's brand.
-
-### 4. Optional preset
-
-Saving is opt-in. Record intent at Step 5, then store only the sample-approved
-character asset or complete walk-cycle bundle, exact style variant, optional
-reference image, palette, size, scale, and placement after Step 8. Never store
-source videos, chapter data, output folders, output resolution, or editor-import
-claims. A future default is a suggestion, never a silent reuse action.
-
-### 5. Transparent-overlay export
-
-The only standard final delivery is a transparent progress-bar MOV over the
-creator's original high-resolution timeline. Do not offer a full composited MP4.
-Before rendering, the creator must confirm that the original project and analysis
-copy keep the same duration, aspect ratio, clip order, and playback speed.
-
-Then collect resolution and output destination one at a time. Show the planning
-range and free space after both values are known. Reserve a versioned final-
-delivery directory only after the Step 8 sample is approved; store rejected or
-abandoned samples in the task's temporary work area. Do not silently select 4K
-or overwrite an existing project.
-
-### 6. Design and sample
-
-The design card must show the selected chapters, role, style, palette, and
-resolution in plain language. Only a Step 7 approval can start the 15-second
-sample. The sample must cross a real chapter boundary and demonstrate transparency,
-character motion where applicable, and likely subtitle/face collisions.
-
-Only a Step 8 approval may start `progress_bar.mov`. If the creator explicitly
-skips sample review, mark editor import as unverified and retain only a planning
-size range.
-
-## Decision log
-
-Create `decision-log.json` in the task work directory. Record every decision:
-
-```json
-{
-  "schemaVersion": 5,
-  "decisions": [
-    {
-      "step": 1,
-      "name": "chapter-confirmation",
-      "status": "awaiting_user",
-      "inputs": [],
-      "evidence": [],
-      "summary": "",
-      "userDecision": "",
-      "approvedAt": null,
-      "nextAction": ""
-    }
-  ]
-}
-```
-
-Allowed statuses are `pending`, `working`, `awaiting_user`, `approved`,
-`revise`, and `complete`. Do not mark a decision approved without an explicit
-creator response. Mark the project complete only after final QC evidence is
-delivered.
-
-## Revision rules
-
-| Changed choice | Keep | Revisit |
+| 决策 | 最少证据 | 已给答案时 |
 | --- | --- | --- |
-| analysis video or chapters | none unless unchanged | every later step |
-| character | analysis video and chapters | style through sample |
-| style or color | analysis video, chapters, character | preset, design, sample |
-| preset | current project choices | only future reuse behavior |
-| output folder or resolution | creative choices | export plan, design, sample |
-| sample rejection | every approved upstream choice | sample and final delivery only |
+| 有无 IP | 本轮明确选择或授权复用 | none 跳过角色；有 IP 四帧，不再选帧数 |
+| 章节 | 当前视频、原话与边界依据 | 仅核对有变化的行 |
+| 角色与样式 | 四帧循环/无角色预览、准确样式映射 | 合并设计查看，不重新逐项问 |
+| 动态审阅 | 待审动态草稿或已授权sample，min(15 秒, 当前时长)，多章跨真实边界 | 实际看过并批准同一短样即计入sample批准，不再重问 |
+| 完整导出 | 样片通过与本轮导出授权，或明确豁免加导出授权 | 同一条用户消息可同时提供，不能重复问 |
 
-Repair the smallest failing artifact, rerun its evidence, and return to the same
-step. Do not restart the whole project because one preview, sample, or encode
-failed.
+用户已知素材和明确选择不等于所有下游批准；反之，已有明确批准也不因形式换了而失效。
+保存私有 decision-log，记录原请求、来源、证据、批准或豁免，不能伪造 verified。
+none 不读角色素材；样片、完整 MOV 和交付素材里都不附带角色。
+
+新增待审draft路线允许技术合格但尚未批准的素材进入短时带标记预览，不要求先批准才能看效果。
+必须显式reviewState=draft并用--purpose draft；不调用debug冒充审阅，不填虚假approved=true。
+draft不能完整导出或保存已验收方案。只有用户实际批准相同动态内容，才在新配置/决策中记录批准；
+去掉草稿标记不等于自动取得批准。一次用户回应可同时覆盖综合方案、短样、完整导出及已说明的保存决定。
+
+## 快速路径
+
+优先检查 `visual_profile.py show --default --library-dir <已知目录>`，或项目里已记录的 profile.json。
+完整视觉方案通过校验且有复用授权时，按 visual-profiles.md 直接恢复当前章节配置。
+不存在新方案时才用以下旧品牌预设检查。新项目默认4章、允许3–5章，旧项目保留原数量。
+独立IP优先按returning-users.md检查；整套样式恢复失败不能自动重新生图。
+
+只从已知私有目录检查实际预设：
+`python scripts/preset_library.py show --default --library-dir <目录> --require-verified --json`。
+必须再核对完整渲染映射；旧单张项目只兼容读取，先说明再决定四帧/无 IP。
+复用视觉不复用旧时轴；新视频依然重做内容分章。不存在默认方案就直接做新项目。
+
+## 修订范围
+
+- 新视频：核对新时长、转写、章节与渲染时间；保留用户已授权视觉，检查新画面是否有冲突。
+- 改章节：保留角色与配色，只更新时轴、标签和受影响样片。
+- 改有无 IP：保留章节与样式，重查角色布局、脚点及样片。
+- 改样式/配色：保留源视频、章节和四帧素材。
+- 改输出目录：只重查路径/空间；改尺寸再查排版与样片。
+- 缺生成能力：保留已完成项目，写可执行的接力提示词，不要求从头开始。
+
+## 交付与保存
+
+透明 MOV 是默认独立成品，不合成原视频。版本化输出，拒绝覆盖。
+样片豁免使用 prepare_delivery.py --sample-waived，sampleApproved=false；
+没有实际审阅不得存为 verified 品牌预设。
+八款完整外观在真实批准与用户愿意保存时用 visual_profile.py 保存；旧品牌预设另作兼容。
+已要求“完成后保存/下次沿用”是保存授权，不再补问；IP独立用character_library.py保存并读回。
+有效库存在时下次主动提出复用；明确none跳过库、明确快速沿用不再重复问。
+详细编码、全量 Alpha 解码及编辑器验收见 export-and-qc.md 与 rendering.md。

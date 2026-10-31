@@ -1,0 +1,15 @@
+{
+  "version": "0.7.4",
+  "defaultWidth": 2160,
+  "chapterPolicy": {"default":4,"minimum":3,"maximum":5},
+  "styles": [
+    {"id":"01","name":"章节胶囊","styleKey":"classic:S1","visualRevision":"readable-20261030","progressMode":"chapter-weighted","description":"单层胶囊，章名清楚；多章节自动分行。"},
+    {"id":"02","name":"分段跑道","styleKey":"classic:S2","visualRevision":"readable-20261030","progressMode":"time-linear","description":"轨道按实际时长分段，完整章名按需分行。"},
+    {"id":"07","name":"细轨章节导航","styleKey":"classic:S7","visualRevision":"editorial-20261030","progressMode":"chapter-weighted","description":"连续细轨、完整章名，只强调当前小序号。"},
+    {"id":"08","name":"双层胶囊","styleKey":"gallery:01","visualRevision":"readable-20261030","progressMode":"chapter-weighted","description":"上小下大，适合观点与步骤；多章节自动分行。"},
+    {"id":"10","name":"贯穿章节带","styleKey":"gallery:03","visualRevision":"refined-20261030","progressMode":"chapter-weighted","description":"连贯章节带，适合紧凑的横向叙事。"},
+    {"id":"11","name":"短横线分段","styleKey":"gallery:04","visualRevision":"refined-20261030","progressMode":"chapter-weighted","description":"短横线与完整章节名称一一对应。"},
+    {"id":"13","name":"箭头阶梯","styleKey":"gallery:06","visualRevision":"refined-20261030","progressMode":"chapter-weighted","description":"箭头连接步骤，突出先后关系。"},
+    {"id":"15","name":"点阵进度","styleKey":"gallery:08","visualRevision":"refined-20261030","progressMode":"chapter-weighted","description":"疏朗点阵与一行章名，保持轻量。"}
+  ]
+}

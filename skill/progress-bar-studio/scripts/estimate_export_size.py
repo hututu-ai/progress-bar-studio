@@ -13,9 +13,9 @@ import sys
 from fractions import Fraction
 from pathlib import Path
 
-PRESETS = (("1080p", 1920), ("2K (2560px wide)", 2560), ("4K", 3840))
-# Planning range for a graphical ProRes 4444 overlay. A final 15-second sample
-# replaces this range before the full-duration render is authorized.
+PRESETS = (("1080p", 1920), ("2K (2160px wide)", 2160), ("4K", 3840))
+# Heuristic planning range, not an upper bound. Actual encodes may exceed it.
+# Measure an encoded short draft/sample to calibrate the full-duration estimate.
 BITS_PER_PIXEL_RANGE = (0.65, 1.75)
 
 
@@ -37,7 +37,7 @@ def probe_video(video: Path) -> tuple[float, float]:
         "-v",
         "error",
         "-show_entries",
-        "format=duration:stream=avg_frame_rate,r_frame_rate",
+        "format=duration:stream=duration,avg_frame_rate,r_frame_rate",
         "-select_streams",
         "v:0",
         "-of",
@@ -59,7 +59,10 @@ def probe_video(video: Path) -> tuple[float, float]:
     try:
         payload = json.loads(result.stdout)
         stream = payload["streams"][0]
-        duration = float(payload["format"]["duration"])
+        raw_duration = stream.get('duration')
+        if raw_duration in (None, 'N/A'):
+            raw_duration = payload['format']['duration']
+        duration = float(raw_duration)
     except (json.JSONDecodeError, KeyError, IndexError, TypeError, ValueError) as exc:
         raise EstimationError(
             f"Cannot find a usable video stream and duration in '{video.name}'. "
@@ -116,9 +119,12 @@ def estimate_bytes(width: int, height: int, fps: float, duration: float, bpp: fl
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Estimate 1080p, 2K (2560px wide), and 4K ProRes 4444 overlay sizes."
+        description="Estimate exact planned overlay dimensions; this project's 2K preset is 2160px wide."
     )
     parser.add_argument("video", type=Path, help="Source video used for duration and fps")
+    parser.add_argument('--width',type=int,help='Exact selected strip width, including explicit 2560 if requested')
+    parser.add_argument('--config',type=Path,help='Current routed config; use its actual derived height, width and target fps')
+    parser.add_argument('--draft',action='store_true',help='Explicitly estimate a pending draft, including its DRAFT band; grants no approval')
     parser.add_argument(
         "--output-dir",
         type=Path,
@@ -147,6 +153,10 @@ def parse_args() -> argparse.Namespace:
         parser.error("--height-ratio must be positive")
     if args.strip_height is not None and args.strip_height <= 0:
         parser.error("--strip-height must be positive")
+    if args.width is not None and not 240<=args.width<=7680:
+        parser.error('--width must be 240–7680 pixels')
+    if args.draft and not args.config:
+        parser.error('--draft requires --config')
     return args
 
 
@@ -155,13 +165,23 @@ def main() -> int:
     try:
         duration, fps = probe_video(args.video)
         destination, free_bytes = output_directory(args.output_dir or args.video.parent)
-    except EstimationError as exc:
+        actual=None
+        if args.config:
+            import style_router as router
+            actual=router.build_renderer(router.load(args.config),args.config.resolve().parent,draft=args.draft).config
+            if abs(actual.duration-duration)>1/fps+.001:
+                raise EstimationError('Config duration differs from the current video; do not reuse an old timeline.')
+            if args.width is not None and args.width!=actual.width or args.strip_height is not None and args.strip_height!=actual.height:
+                raise EstimationError('Explicit dimensions conflict with the render config.')
+            fps=actual.fps
+    except (EstimationError,ValueError,OSError) as exc:
         print(f"Cannot estimate output size: {exc}", file=sys.stderr)
         return 2
 
     estimates = []
-    for label, width in PRESETS:
-        height = args.strip_height or round(width * args.height_ratio / 2) * 2
+    dimensions=[(f'{actual.width}px actual render',actual.width)] if actual else [(f'{args.width}px selected',args.width)] if args.width else PRESETS
+    for label, width in dimensions:
+        height = actual.height if actual else args.strip_height or round(width * args.height_ratio / 2) * 2
         low = estimate_bytes(width, height, fps, duration, BITS_PER_PIXEL_RANGE[0])
         high = estimate_bytes(width, height, fps, duration, BITS_PER_PIXEL_RANGE[1])
         estimates.append(
@@ -181,9 +201,13 @@ def main() -> int:
         "outputDirectory": str(destination),
         "freeBytes": free_bytes,
         "estimates": estimates,
+        "estimateBasis": "uncalibrated-planning-range",
+        "upperBoundGuaranteed": False,
+        "reviewState": "draft" if args.draft else "unchanged",
         "note": (
-            "Planning range only. Encode a 15-second sample after style approval "
-            "to calculate the final full-duration estimate before rendering."
+            "Uncalibrated planning range, not a guaranteed upper bound. Actual files may be larger. "
+            "Measure a short encoded draft/sample made with the same render settings to calibrate "
+            "the full-duration estimate; estimating or encoding a draft grants no approval."
         ),
     }
     if args.json:

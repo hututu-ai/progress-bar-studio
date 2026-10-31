@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "note": "Editable starting palettes. Project-specific creator approval is still required. Explicit palette keys override a named preset.",
+  "palettes": {
+    "cream-tea": {
+      "surface": "#FBF7F0",
+      "active": "#C4A38A",
+      "inactive": "#EDE6DE",
+      "text": "#55463D",
+      "active-text": "#382B24",
+      "outline": "#DAD0C5",
+      "shadow": "#493D2E08",
+      "muted-text": "#82766D",
+      "accent-text": "#825B42"
+    },
+    "sage": {
+      "surface": "#F5F6EE",
+      "active": "#A2B28D",
+      "inactive": "#E3E7D9",
+      "text": "#35483B",
+      "active-text": "#263729",
+      "outline": "#CBD3BF",
+      "shadow": "#283B2A08",
+      "muted-text": "#6E796A",
+      "accent-text": "#405D45"
+    },
+    "lavender": {
+      "surface": "#F6F2FC",
+      "active": "#C4B4D9",
+      "inactive": "#E9E2F0",
+      "text": "#51455E",
+      "active-text": "#392F45",
+      "outline": "#D9CEE4",
+      "shadow": "#43305208",
+      "muted-text": "#82758E",
+      "accent-text": "#A64077",
+      "progress": "#A64077"
+    },
+    "navy-cream": {
+      "surface": "#172541",
+      "active": "#E7DCC5",
+      "inactive": "#35445F",
+      "text": "#F6F0E3",
+      "active-text": "#172541",
+      "outline": "#58667E",
+      "shadow": "#111A2A10",
+      "muted-text": "#C0C7D4",
+      "accent-text": "#F1DEB6"
+    }
+  }
+}

@@ -13,6 +13,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from PIL import Image, ImageDraw
+
 REPOSITORY = Path(__file__).resolve().parents[1]
 SCRIPTS = REPOSITORY / "skill" / "progress-bar-studio" / "scripts"
 PREFLIGHT = SCRIPTS / "preflight.py"
@@ -111,7 +113,20 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
             "--json",
         )
         payload = json_output(estimate)
-        self.assertEqual([item["width"] for item in payload["estimates"]], [1920, 2560, 3840])
+        self.assertEqual([item["width"] for item in payload["estimates"]], [1920, 2160, 3840])
+
+    def test_estimator_uses_actual_render_dimensions_and_retains_explicit_2560(self):
+        import style_router as router
+        font=str(router.classic.choose_font(None,self.root))
+        timeline={'duration':.4,'fps':30,'chapters':[
+            {'start':0,'label':'发现问题'},{'start':.1,'label':'解决方法'},{'start':.3,'label':'实际验证'}]}
+        env=router.new_config('01',timeline,font,font,2160,router.classic.PALETTE_PRESETS['sage'])
+        config=self.root/'render.json';config.write_text(json.dumps(env))
+        actual=router.build_renderer(env,self.root).config
+        result=json_output(run(sys.executable,str(ESTIMATOR),str(self.wide_no_audio),'--config',str(config),'--json'))
+        self.assertEqual([(x['width'],x['height']) for x in result['estimates']],[(2160,actual.height)])
+        explicit=json_output(run(sys.executable,str(ESTIMATOR),str(self.wide_no_audio),'--width','2560','--json'))
+        self.assertEqual([x['width'] for x in explicit['estimates']],[2560])
 
     def test_broken_video_blocks_preflight(self) -> None:
         result = run(
@@ -208,29 +223,15 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
 
     def test_saved_default_preset_copies_complete_walk_cycle_bundle(self) -> None:
         reference = self.root / "reference.png"
-        reference.write_bytes(b"style asset")
+        Image.new("RGB", (32, 32), "white").save(reference)
+        sheet = Image.new("RGBA", (128, 32), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(sheet)
+        for index in range(4):
+            draw.rectangle((index * 32 + 8 + index, 6, index * 32 + 20, 25), fill=(40, 80 + index * 20, 120, 255))
+        source_sheet = self.root / "sheet.png"
+        sheet.save(source_sheet)
         cycle_dir = self.root / "approved-walk-cycle"
-        cycle_dir.mkdir()
-        frames = []
-        for index in range(1, 5):
-            frame = cycle_dir / f"character-walk-frame-{index:02d}.png"
-            frame.write_bytes(b"transparent frame")
-            frames.append(frame.name)
-        (cycle_dir / "character-walk-spritesheet.png").write_bytes(b"sprite sheet")
-        (cycle_dir / "character-walk-preview.webp").write_bytes(b"preview")
-        (cycle_dir / "character-walk-cycle.json").write_text(
-            json.dumps(
-                {
-                    "frameCount": 4,
-                    "frames": frames,
-                    "spriteSheet": "character-walk-spritesheet.png",
-                    "preview": "character-walk-preview.webp",
-                    "fps": 8,
-                    "playbackOrder": [1, 2, 3, 4],
-                }
-            ),
-            encoding="utf-8",
-        )
+        run(sys.executable, str(SCRIPTS / "split_walk_cycle.py"), "--input", str(source_sheet), "--out-dir", str(cycle_dir))
         library = self.root / "preset-library"
         result = run(
             sys.executable,
@@ -262,6 +263,8 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
             "0",
             "--position-y",
             "32",
+            "--sample-approved",
+            "--final-export-approved",
             "--set-default",
             "--json",
         )
@@ -282,7 +285,7 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
         )
         loaded_payload = json_output(loaded)
         self.assertEqual(loaded_payload["character"]["mode"], "walk-cycle")
-        self.assertEqual(loaded_payload["schemaVersion"], 3)
+        self.assertEqual(loaded_payload["schemaVersion"], 4)
         self.assertEqual(loaded_payload["style"]["variant"], "white-card-two-level-capsules")
         self.assertEqual(loaded_payload["style"]["chapterCountPolicy"], "content-adaptive")
         self.assertEqual(loaded_payload["placement"]["y"], 32.0)
@@ -314,17 +317,16 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
         )
         self.assertIn("requires --character-cycle-dir", result.stderr)
 
-    def test_guided_conversation_requires_eight_single_choice_steps(self) -> None:
+    def test_guided_conversation_uses_five_steps_without_repeated_questions(self) -> None:
         guide = GUIDED_CONVERSATION.read_text(encoding="utf-8")
-        self.assertIn("one decision per reply", guide)
-        self.assertIn("进度 X/8", guide)
-        self.assertIn("快捷设置", guide)
-        self.assertIn("Fast mode", guide)
-        self.assertIn("四帧透明步态", guide)
-        for step in range(1, 9):
-            self.assertIn(f"Step {step}/8", guide)
-        self.assertIn("改一下", guide)
-        self.assertIn("返回上一步", guide)
+        self.assertNotIn("进度 X/8", guide)
+        self.assertIn("已给出的答案、授权和委托不重复问", guide)
+        self.assertIn("有 IP / 无 IP", guide)
+        self.assertIn("不能自动降级为静态贴纸", guide)
+        for step in range(1, 6):
+            self.assertIn(f"## {step}.", guide)
+        self.assertIn("新视频时长和章节永远重新核对", guide)
+        self.assertIn("已有明确样片豁免与导出授权", guide)
 
     def test_delivery_reservation_requires_sample_approval(self) -> None:
         result = run(
@@ -377,7 +379,7 @@ class ProgressBarStudioRegressionTests(unittest.TestCase):
         self.assertTrue(first_payload["sampleApproved"])
         self.assertEqual(first_payload["creatorArtifacts"], ["progress_bar.mov"])
         self.assertEqual(first_payload["projectRecords"], ["chapters.json", "style.json", "qc/"])
-        self.assertEqual(first_payload["nextCheckpoint"], "combined-preview")
+        self.assertEqual(first_payload["nextCheckpoint"], "final-render")
 
 
 if __name__ == "__main__":

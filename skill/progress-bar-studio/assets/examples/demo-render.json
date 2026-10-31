@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "duration": 10,
+  "fps": 24,
+  "width": 1280,
+  "height": 320,
+  "style": "S1",
+  "palette": {
+    "surface": "#FBF7F0",
+    "active": "#C4A38A",
+    "inactive": "#EDE6DE",
+    "text": "#55463D",
+    "active-text": "#382B24",
+    "outline": "#DAD0C5",
+    "shadow": "#493D2E08",
+    "muted-text": "#82766D",
+    "accent-text": "#825B42"
+  },
+  "character": {
+    "mode": "none"
+  },
+  "demoLabel": true,
+  "chapters": [
+    {
+      "start": 0,
+      "end": 3,
+      "title": "找到问题"
+    },
+    {
+      "start": 3,
+      "end": 7,
+      "title": "动手实践"
+    },
+    {
+      "start": 7,
+      "end": 10,
+      "title": "带走要点"
+    }
+  ]
+}

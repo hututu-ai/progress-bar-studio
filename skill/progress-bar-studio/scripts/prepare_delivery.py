@@ -53,11 +53,16 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="The user-approved character path.",
     )
-    parser.add_argument(
+    sample_decision = parser.add_mutually_exclusive_group(required=True)
+    sample_decision.add_argument(
         "--sample-approved",
         action="store_true",
-        required=True,
-        help="Required explicit approval after the 15-second transparent sample.",
+        help="The creator explicitly approved the 15-second transparent sample.",
+    )
+    sample_decision.add_argument(
+        "--sample-waived",
+        action="store_true",
+        help="The creator explicitly chose to skip the sample; this is not sample approval.",
     )
     parser.add_argument("--json", action="store_true")
     return parser.parse_args()
@@ -97,9 +102,10 @@ def main() -> int:
         "sourceVideo": str(source),
         "characterMode": args.character_mode,
         "characterOutputs": character_outputs,
-        "nextCheckpoint": "combined-preview",
-        "sampleArtifacts": ["sample_progress_bar.mov"],
+        "nextCheckpoint": "final-render",
+        "sampleArtifacts": ["sample_progress_bar.mov"] if args.sample_approved else [],
         "sampleApproved": args.sample_approved,
+        "sampleWaived": args.sample_waived,
         "creatorArtifacts": creator_artifacts,
         "projectRecords": project_records,
     }
@@ -108,6 +114,7 @@ def main() -> int:
     else:
         print(f"Reserved: {delivery_dir}")
         print(f"Character mode: {args.character_mode}")
+        print("Sample: " + ("approved" if args.sample_approved else "explicitly waived by creator"))
         print("Final delivery: transparent overlay MOV")
         print(f"Next checkpoint: {result['nextCheckpoint']}")
     return 0

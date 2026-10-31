@@ -8,6 +8,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -89,6 +90,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, help="Approved delivery folder")
     parser.add_argument("--required-bytes", type=int, help="Estimated final master size in bytes")
     parser.add_argument("--json", action="store_true", help="Print machine-readable output")
+    parser.add_argument('--font',type=Path,help='Chosen local font; validate actual label glyphs with --text')
+    parser.add_argument('--text',default='章节进度开场总结',help='Actual chapter/kicker text to check')
     return parser.parse_args()
 
 
@@ -102,6 +105,17 @@ def main() -> int:
     ffprobe = command_available("ffprobe")
     prores4444 = encoder_available()
     pillow, webp = pillow_capabilities()
+    font_result='unverified: Pillow required'
+    if pillow:
+        try:
+            from render_progress import choose_font
+            from font_validation import require_glyphs
+            font=choose_font(str(args.font) if args.font else None,Path.cwd(),any(ord(c)>127 for c in args.text))
+            require_glyphs(font,args.text)
+            font_result={'path':str(font),'glyphCoverage':'passed','testedText':args.text}
+        except ValueError as exc:
+            blockers.append('FONT_GLYPHS_UNAVAILABLE')
+            next_actions.append(str(exc))
 
     if not ffmpeg:
         blockers.append("FFMPEG_MISSING")
@@ -113,8 +127,8 @@ def main() -> int:
         blockers.append("PRORES_4444_ENCODER_MISSING")
         next_actions.append("Use an FFmpeg build with the prores_ks encoder for transparent MOV export.")
     if not pillow:
-        warnings.append("PILLOW_MISSING")
-        next_actions.append("Install Pillow for four-frame walk-cycle splitting, or choose no character/single pose.")
+        blockers.append("PILLOW_MISSING")
+        next_actions.append("Install Pillow in this Python environment before any local preview or MOV render; no-character mode also requires it. Chapter planning can continue independently.")
     elif not webp:
         warnings.append("WEBP_UNAVAILABLE")
         next_actions.append("Use a Pillow build with WebP support to export walk-cycle previews.")
@@ -138,10 +152,13 @@ def main() -> int:
                 "Provide an editable timestamped chapter list, or choose a version with audio for automatic chapter analysis."
             )
 
-    output = args.output_dir or (source.parent if source else None)
+    # Analysis can use read-only source media before a delivery folder is chosen.
+    # Never infer an approved output destination from the source video's location.
+    output = args.output_dir
     free_bytes: int | None = None
     if output is None:
         warnings.append("OUTPUT_DIRECTORY_NOT_SELECTED")
+        next_actions.append("Choose an output folder before rendering the final master.")
     else:
         output_blockers, output_actions, free_bytes = check_output_folder(output)
         blockers.extend(output_blockers)
@@ -169,8 +186,10 @@ def main() -> int:
             "prores4444": prores4444,
             "pillow": pillow,
             "walkWebp": webp,
-            "transcription": "host-provided",
-            "imageEditing": "host-provided",
+            "font": font_result,
+            "python": {'executable':sys.executable,'version':sys.version.split()[0]},
+            "transcription": "unknown: host tool evidence required",
+            "imageEditing": "unknown: reference-image editing tool evidence required",
         },
         "sourceVideo": str(source) if source else None,
         "outputDirectory": str(output.expanduser().resolve()) if output else None,

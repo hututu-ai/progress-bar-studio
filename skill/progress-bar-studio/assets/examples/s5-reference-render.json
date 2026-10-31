@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "duration": 10,
+  "fps": 24,
+  "width": 1280,
+  "height": 240,
+  "style": "S5",
+  "palettePreset": "cream-tea",
+  "character": {
+    "mode": "none"
+  },
+  "chapters": [
+    {
+      "start": 0,
+      "end": 2.5,
+      "title": "开场",
+      "subtitle": "Beginning"
+    },
+    {
+      "start": 2.5,
+      "end": 5,
+      "title": "一个想法",
+      "subtitle": "A little idea"
+    },
+    {
+      "start": 5,
+      "end": 7.5,
+      "title": "动手试试",
+      "subtitle": "Try it out"
+    },
+    {
+      "start": 7.5,
+      "end": 10,
+      "title": "小结",
+      "subtitle": "Takeaways"
+    }
+  ],
+  "demoLabel": true
+}

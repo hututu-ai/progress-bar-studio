@@ -1,63 +1,126 @@
-# Chapter analysis
+# 语义章节：先归类，再定切点，最后写标题
 
-## Derive chapters from a source video
+## 一、先锁定当前成片
 
-1. Probe exact duration and fps.
-2. Transcribe speech with timestamps.
-3. Mark all semantic nodes without aiming for a predetermined count: hook,
-   definition, demonstration, comparison, example, recommendation, recap, and
-   call to action.
-4. Convert semantic nodes into visible presentation chapters. Merge supporting
-   examples, substeps, repeated claims, and intervals shorter than about 8
-   seconds into their parent chapter unless a rapid format is intentional.
-5. Choose the visible count from content density and final-size readability:
-   - for videos up to 180 seconds, normally present 3–5 chapters;
-   - 6–7 chapters are allowed when every transition is semantically strong and
-     every label remains readable;
-   - for longer videos, add chapters only when distinct content sections require
-     them. Seven may still be sufficient; there is no duration-derived target or
-     fixed upper count.
-6. Name chapters with 2–6 Chinese characters or 1–3 short English words.
-7. Align chapter changes to the first frame of the new spoken idea.
-8. Show the proposed timeline before designing.
+读真实时长和帧率；用当前文件的 SHA-256 作 sourceId（前缀 sha256:）。
+转写、章节证据和渲染配置属于同一 sourceId。重剪、更换文件后重建证据；即使
+标题沿用，也不能沿用旧时间。无 ASR 时接收同一成片的 SRT/VTT，不用图片猜秒数。
 
-Do not divide the video into equal durations when speech provides meaningful
-boundaries.
+## 二、两轮分章，禁止按时长凑数
 
-Keep raw `semanticNodes` and visible `chapters` conceptually separate. Never
-force three chapters because a reused S1 preset once showed three capsules, and
-never expose seven capsules merely because transcription produced seven raw
-markers. A preset reuses visual grammar, not the previous video's chapter count.
+**第一轮只做内容地图，不起漂亮标题。**
+通读全稿，用一句话写出“本片向谁说明什么”；给连续片段标注功能：
+问题/总观点、理由、独立用法、操作步骤、证据/演示、总结/行动。
+这些是分析标签，不是强迫每条视频都具有的模板。
 
-## Timing manifest
+**第二轮把内容地图合成观众可见的章节。**
+每个候选边界都问：观众是否开始回答另一个问题，或执行一个新的独立任务？
+- 观点型：总观点 → 几个独立理由；例证跟所属理由。
+- 多用法分享：每个独立用法一章；同一用法的演示、改稿前后对比归入该章。
+- 教程型：按完成任务的阶段切，不按每次点击、每个屏幕变化切。
+- 故事型：按情境、转折、结果；不强塞“第一步、第二步”。
+- 复合型：采用主结构；不要把理由、点击步骤、章节主题放在同一级。
 
-Keep one explicit manifest:
+“然后、接下来、我们看”只是线索，不能单独成为切章理由。
+以下情况优先合并：重复说法、同一结论的补充、案例、回顾、短暂插话。
+以下情况可拆开：新功能有独立目标和结果，或主题已经换了且持续展开。
+不足约 8 秒仅作复查提醒，不自动删除短章；长章也不因时长而自动拆。
+新项目默认 4 章，允许 3–5 章，最多 5 章；不再给七章路线。
+默认 4 是起点，不是平均切四份。三个完整主题就保留三章，确有第五个独立主题才用五章。
+超过五个候选主题时先上收层级，把子步骤、例证、前后对比并回所属主题，不删掉它们的内容。
+不为凑满三章把一个完整用法硬拆开；确实不足三个独立主题时说明限制，集中询问一次如何呈现。
+旧项目的多章配置可以原样复现，不强迫重切旧视频。
 
+例：00:27 审美诊断 + 01:24 改稿对比 → 同章“用法一 / 审美顾问”。
+高清化、去杂物、提取元素如共同服务“素材处理”，先归“用法二 / 素材处理”；
+只有各自成为独立且充分展开的教程时，才升级为可见章节。时间必须来自当前视频。
+
+## 三、复听边界，保留可追溯证据
+
+对每个切点查看前后约 3–5 秒的原话（短片以实际范围为限）：
+前一章是否已经说完？后一章的第一句实质信息在哪里？
+切点落在新观点/任务开始处；不把连接词、吸气、停顿、换镜头当独立章节。
+字幕粒度过粗时，用词级时间或局部复听细化；只有整句时间时不宣称逐帧语义精度。
+不能可靠定点，标记 needsReview，并只问这一处；不要整条重新发问卷。
+
+第一章从 0 开始，包括片头留白；末章结束于成片真实时长；无空档、重叠。
+编码帧数按实际导出契约 ceil(duration * fps)（减去浮点误差），不是任意四舍五入。
+
+## 四、标题两层，信息平行
+
+kicker（上行）：开场 / 总观点 / 第一个理由 / 用法一 等结构信息，较小较轻。
+label（下行）：能概括该章的具体主题，较大加粗，通常 2–8 个汉字；不为字数删掉必要意思。
+同级标题采用同一语法和抽象层级；不要一章写“方法”，另一章写长结论。
+拒绝空标签“内容/信息/演示”作为真实章节名，除非就是用户明确命名。
+先检查标题能否区别相邻章节，再检查最小显示尺寸；不通过压缩字体掩盖过长标题。
+不支持双行的样式只显示 label；保留 kicker 在证据文件，不能把它硬塞成一行。
+需要双层展示时优先用图册 08 双层胶囊（gallery:01），不要改经典 01 的含义。
+
+## 五、Agent 内部证据文件与检查
+
+转写 JSON（保留原始 SRT/VTT；此处是规范化副本）：
 ```json
-{
-  "duration": 120.8,
-  "fps": 30,
-  "chapters": [
-    {"start": 0.0, "label": "开场"},
-    {"start": 13.0, "label": "信息雷达"},
-    {"start": 40.0, "label": "日报周报"}
-  ]
-}
+{"sourceId":"sha256:<当前文件摘要>","segments":[
+  {"id":"s1","start":0.6,"end":6.8,"text":"大家经常问我怎么修改排版。"},
+  {"id":"s2","start":7,"end":11.8,"text":"第一个用法是让它做审美顾问。"},
+  {"id":"s3","start":12,"end":14.5,"text":"第二个用法是处理素材。"}
+]}
 ```
 
-Validate:
+章节证据 JSON（此格式不是渲染器配置，不直接交给 renderer）：
+```json
+{"sourceId":"sha256:<当前文件摘要>","duration":15,"fps":30,"chapters":[
+  {"start":0,"end":7,"kicker":"开场","label":"排版困惑","summary":"提出本片要解决的排版问题",
+   "segmentIds":["s1"],"openingQuote":"大家经常问我怎么修改排版。","boundaryReason":"片头开始","needsReview":false},
+  {"start":7,"end":12,"kicker":"用法一","label":"审美顾问","summary":"介绍诊断排版的独立用法",
+   "segmentIds":["s2"],"openingQuote":"第一个用法是让它做审美顾问。","boundaryReason":"开始第一个独立用法","needsReview":false},
+  {"start":12,"end":15,"kicker":"用法二","label":"素材处理","summary":"进入独立的素材处理用法",
+   "segmentIds":["s3"],"openingQuote":"第二个用法是处理素材。","boundaryReason":"开始第二个独立用法","needsReview":false}
+]}
+```
 
-- first chapter starts at zero;
-- starts are strictly increasing;
-- last start is before duration;
-- frame count equals rounded duration × fps as required by the source;
-- labels fit at the smallest display size.
+运行：
+`python scripts/validate_chapters.py chapters.json transcript.json --source-video current.mp4 --current-policy`
 
-## Transition QC
+它验证来源摘要、真实视频轨时长与帧率、时间覆盖、段落归属、原话引用与边界位置，不能判断
+语义理解是否正确，不能自动提升低置信度为已确认。
+提供 `--source-video` 时，帧率须与真实视频一致；数字和 `30000/1001` 分数写法均可。
+时间容差取自真实视频帧率，不能用配置里的错误低帧率放宽。编码取整保留一帧容差；
+不能借此延长成片。只有视频轨缺少时长时才退回容器时长，避免尾部音轨拖长章节。
+Agent 必须再进行一次反向审阅：只读标题能否复述主线？逐章读归属原文是否都支持标题？
+合并一处是否更清楚？拆开一处是否真的有新任务？先自行修正，只把仍不确定的点给用户。
 
-For every boundary, inspect one frame immediately before and one immediately
-after it. Confirm:
+用户已有可信时间表时核对并保留，不强制重转写或伪造 quote 来通过这个检查器。
+无转写证据则标为用户提供/人工核对，不报告“转写证据检查通过”。
 
-- only the expected chapter changes highlight;
-- the character and completed track remain continuous;
-- no one-frame flash, missing label, or stale state appears.
+## 六、最短展示与渲染映射
+
+对用户只展示“时间范围｜小标题 / 主标题”的短表；不倾倒所有分析标签。
+可与样式方案一次展示。需要解释时再显示切分依据与不确定点。
+内部使用 classic 时映射 label → title、start/end；只有支持的样式才渲染 subtitle。
+gallery 使用 label/kicker/start 和当前 duration/fps。保持 sourceId 在项目证据，
+不要把不支持的证据字段直接塞给渲染器。
+每个边界检查前后帧、高亮、脚点与填充前沿一致，完整目录样式保留已讲过的章。
+
+## 七、自动化的质量闭环
+
+AI 负责主题判断，程序负责来源与时间硬检查，两者不能互相冒充。
+
+1. 有可用 ASR 时读取全片带时间转写；无 ASR 接收当前 SRT/VTT，不从时长猜章节。
+2. 一次通读形成内容地图：每段回答什么问题、属于哪个完整任务、是主论点还是例证。
+3. 合并为 3–5 章（默认 4、最多 5），再写平行且具体的标题；不先列四个空标题再填内容。
+4. 逐个边界回看前后约 3–5 秒，定位新任务第一句。只有句级时间时不宣称句内切点精确；
+   用可用词级时间或局部复听细化，不能靠加减一个固定秒数修正。
+5. 反向审阅：本章原文是否都支持标题？下一章是否真正开始另一个任务？只读标题能否复述主线？
+   如果只换了画面、给了例子或展示改稿对比，通常不另开章。
+6. Agent 先用已有素材消除疑点。确实无法确定的边界才标 needsReview，给前后原话与一个具体问题；
+   不把所有章节发给用户从头做，不以模型自报“95%置信度”替代证据。
+7. 新项目检查 `validate_chapters.py ... --current-policy`；导出前再加 `--require-reviewed`，
+   确保仍标待复核的边界不会自动进入成品。通过只证明结构，不证明语义百分之百正确。
+   每章都在实际核对后写布尔值 needsReview=false；缺字段、字符串“false”或数字0不能替代已复核。
+   历史证据缺字段仍可读作分析草稿，但必须补做边界核对后才能通过导出前检查，不能批量填false凑通过。
+
+用户纠正的并章/改名/切点保存在当前私有项目的修订记录，作为下次理解该用户表达习惯的参考；
+不能复用旧秒数，也不把未经脱敏和允许的用户视频或逐字稿放入公共 Skill。
+既往已确认的结构范例：同一用法的诊断与改稿对比归一章；多种素材处理操作先归同一用途；
+总观点与理由保持同级。它们是分组规则，不能代替本条视频的完整转写和证据。

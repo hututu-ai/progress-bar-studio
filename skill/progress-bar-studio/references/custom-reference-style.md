@@ -1,6 +1,6 @@
 # Custom reference style
 
-Use this route only during the style decision. It extends style choice without adding a separate creator decision or replacing the four built-in presets.
+Use this route only during the style decision. It extends style choice without adding a separate creator decision or replacing the four classic or three optional built-in styles. It has no S-number.
 
 ## Accepted input
 
@@ -46,9 +46,13 @@ Record at least:
 }
 ```
 
-Use `palettePolicy: project-palette` when the user wants their chosen colors.
-If no preference is stated, extract the reference palette, show the derived four
-swatches, and keep every value editable.
+Use `palettePolicy: project-palette` for the creator's chosen colors, or
+`video-derived-proposal` when proposing from representative video frames. Only
+use `adapted-from-reference` when the creator explicitly selects this image as
+the color source. A structure-only screenshot does not silently choose a palette.
+If no color preference is stated, recommend the video-matched palette, show the
+headline swatches with a real-video composite, and keep every value editable.
+Follow the source priority in `style-system.md`.
 
 ## Boundaries
 

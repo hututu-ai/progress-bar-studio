@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.7.4 - 2026-11-01
+
+### Fixed
+
+- Validate chapter duration and fps against the actual source video track. An
+  incorrect declared fps can no longer enlarge timing tolerance.
+- Accept rational frame rates such as `30000/1001` in chapter evidence.
+- Add explicit `estimate_export_size.py --draft --config ...` support using the
+  draft's actual dimensions, without changing asset or export approval.
+- Label heuristic file-size ranges as uncalibrated and not guaranteed upper bounds.
+
+### Updated
+
+- Sync the current eight-style catalog, 3–5 semantic chapter workflow, no-character
+  and four-frame routes, video-fit checks, and private IP / visual-profile reuse.
+- Include the production regression suite, with 16 new timing/draft-estimation
+  tests. Keep retired local design experiments outside the public package.
+- Provide CJK fonts in CI so actual Chinese labels are validated during rendering.
+
 ## 0.4.0 - 2026-08-23
 
 ### Changed
